@@ -19,6 +19,8 @@ export class UploadError extends Error {
 
 export const uploadRequestSchema = z.object({
   name: z.string().trim().max(60).optional().transform((v) => v || undefined),
+  /** Greeting shown as a caption on the screen. */
+  message: z.string().trim().max(140).optional().transform((v) => v?.replace(/\s+/g, " ") || undefined),
   files: z
     .array(z.object({ name: z.string().max(255), size: z.number().int().positive(), type: z.string().max(100) }))
     .min(1)
@@ -90,7 +92,7 @@ export async function createUploads(opts: {
   for (const f of files) {
     const media = await db.media.create({
       data: {
-        eventId: event.id, guestSessionId: guest.id, senderName: guest.name, type: f.kind, status: "uploading",
+        eventId: event.id, guestSessionId: guest.id, senderName: guest.name, message: opts.request.message ?? null, type: f.kind, status: "uploading",
         originalKey: "", mimeType: f.mime, sizeBytes: BigInt(f.size),
       },
     });

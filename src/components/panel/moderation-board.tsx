@@ -228,6 +228,7 @@ export function ModerationBoard({ eventId, initialAutoApprove, canConfigure }: {
               <div className="flex items-center justify-between gap-2 p-2.5">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{it.senderName ?? "Anónimo"}</p>
+                  {it.message && <p className="truncate text-xs italic text-muted" title={it.message}>“{it.message}”</p>}
                   <p className="font-mono text-[11px] text-faint">{ago(it.createdAt)}</p>
                 </div>
                 <div className="flex shrink-0 gap-1">
@@ -266,6 +267,7 @@ export function ModerationBoard({ eventId, initialAutoApprove, canConfigure }: {
           <div className="flex items-center justify-between gap-4 px-4 py-3 text-white sm:px-6">
             <div className="min-w-0">
               <p className="truncate font-semibold">{current.senderName ?? "Anónimo"}</p>
+              {current.message && <p className="text-sm italic text-white/80">“{current.message}”</p>}
               <p className="font-mono text-xs text-white/60">{ago(current.createdAt)} · {open! + 1} de {items.length}</p>
             </div>
             <button onClick={() => setOpen(null)} className="grid size-10 place-items-center rounded-full hover:bg-white/10" aria-label="Cerrar (Esc)"><X className="size-5" /></button>

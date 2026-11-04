@@ -159,6 +159,7 @@ model ProjectionSettings {
   playOrder        PlayOrder @default(newest_first)
   showSenderName   Boolean   @default(true)
   appearance       Json      @default("{}")
+  features         Json      @default("{}")
   version          Int       @default(1)
   updatedAt        DateTime  @updatedAt
 }
@@ -195,6 +196,7 @@ model Media {
   guestSessionId String?
   guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
   senderName     String?
+  message        String?
   type           MediaType
   status         MediaStatus   @default(uploading)
   originalKey    String

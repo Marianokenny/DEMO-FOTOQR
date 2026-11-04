@@ -6,6 +6,10 @@ import { newRedisConnection } from "./redis";
  * Sends a comment every 20 s so proxies and venue routers don't close an idle connection.
  */
 export function eventStream(eventId: string, signal: AbortSignal, initial?: () => Promise<unknown>) {
+  return channelStream(eventChannel(eventId), signal, initial);
+}
+
+export function channelStream(channel: string, signal: AbortSignal, initial?: () => Promise<unknown>) {
   const encoder = new TextEncoder();
   const sub = newRedisConnection();
   let heartbeat: ReturnType<typeof setInterval> | undefined;
@@ -24,7 +28,7 @@ export function eventStream(eventId: string, signal: AbortSignal, initial?: () =
       send("retry: 3000\n\n");
       if (initial) send(`event: snapshot\ndata: ${JSON.stringify(await initial())}\n\n`);
       sub.on("message", (_ch, message) => send(`data: ${message}\n\n`));
-      await sub.subscribe(eventChannel(eventId));
+      await sub.subscribe(channel);
       heartbeat = setInterval(() => send(`: ping ${Date.now()}\n\n`), 20_000);
     },
     cancel() {

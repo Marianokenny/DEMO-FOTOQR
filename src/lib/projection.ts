@@ -1,6 +1,8 @@
 import type { User } from "@prisma/client";
 import { z } from "zod";
 import { readAppearance, type Appearance } from "./appearance";
+import { readFeatures, type Features } from "./features";
+import { getLive, leaderboard, type LiveState } from "./live";
 import { db } from "./db";
 import { getActiveLink, linkUrl, resolveLink } from "./links";
 import { assertCan } from "./permissions";
@@ -25,7 +27,7 @@ export type ProjectionSettingsInput = z.infer<typeof projectionSettingsSchema>;
 
 export type ScreenItem = {
   id: string; type: "photo" | "video"; url: string; posterUrl: string | null;
-  senderName: string | null; durationMs: number | null; width: number | null; height: number | null; approvedAt: string;
+  senderName: string | null; message: string | null; durationMs: number | null; width: number | null; height: number | null; approvedAt: string;
 };
 
 export type ScreenState = {
@@ -35,6 +37,9 @@ export type ScreenState = {
   uploadUrl: string | null;
   settings: Omit<ProjectionSettingsInput, "enabled" | "expiresAt"> & { version: number };
   appearance: Appearance;
+  features: Features;
+  live: LiveState;
+  leaderboard: { name: string; count: number }[];
   assets: Record<string, string>;
   items: ScreenItem[];
   generatedAt: string;
@@ -65,7 +70,7 @@ export async function buildScreenState(eventId: string): Promise<ScreenState> {
   const items: ScreenItem[] = await Promise.all(media.filter((m) => m.displayKey).map(async (m) => ({
     id: m.id, type: m.type, url: await st.presignDownload(m.displayKey!, SCREEN_URL_TTL),
     posterUrl: m.posterKey ? await st.presignDownload(m.posterKey, SCREEN_URL_TTL) : null,
-    senderName: m.senderName, durationMs: m.durationMs, width: m.width, height: m.height,
+    senderName: m.senderName, message: m.message, durationMs: m.durationMs, width: m.width, height: m.height,
     approvedAt: (m.approvedAt ?? m.createdAt).toISOString(),
   })));
   const assets: Record<string, string> = {};
@@ -82,6 +87,9 @@ export async function buildScreenState(eventId: string): Promise<ScreenState> {
       transition: s.transition as "fade" | "slide" | "zoom", playOrder: s.playOrder, showSenderName: s.showSenderName, version: s.version,
     },
     appearance: readAppearance(s.appearance),
+    features: readFeatures(s.features),
+    live: await getLive(eventId),
+    leaderboard: on ? (await leaderboard(eventId)).map(({ name, count }) => ({ name, count })) : [],
     assets,
     items,
     generatedAt: new Date().toISOString(),

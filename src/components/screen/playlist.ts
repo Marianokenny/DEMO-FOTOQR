@@ -40,6 +40,23 @@ export class Playlist {
     this.sync(this.items.filter((i) => i.id !== id), { prioritizeNew: false });
   }
 
+  /** Puts an item at the front of the line (organizer's "pasar ahora"). */
+  playNext(id: string) {
+    if (!this.has(id)) return false;
+    this.priority = [id, ...this.priority.filter((x) => x !== id)];
+    return true;
+  }
+
+  /** Best guess of what comes after the current item, without advancing. */
+  peek(): ScreenItem | null {
+    if (!this.items.length) return null;
+    const byId = (id: string) => this.items.find((i) => i.id === id) ?? null;
+    for (const id of this.priority) { const it = byId(id); if (it) return it; }
+    if (this.order === "random") return this.bag.length ? byId(this.bag[0]) : null;
+    const list = this.order === "newest_first" ? [...this.items].reverse() : this.items;
+    return list[(this.cursor + 1) % list.length] ?? null;
+  }
+
   next(): ScreenItem | null {
     if (!this.items.length) return null;
     const byId = (id: string) => this.items.find((i) => i.id === id) ?? null;

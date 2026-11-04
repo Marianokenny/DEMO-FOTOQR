@@ -6,7 +6,9 @@ import { Arrow, buttonClass } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { toLocalInputValue } from "@/lib/dates";
 import { linkUrl } from "@/lib/links";
+import { readFeatures } from "@/lib/features";
 import { CopyButton } from "./copy-button";
+import { FeaturesForm } from "./features-form";
 import { ProjectionSettingsForm } from "./projection-settings-form";
 import { ProjectionToggle } from "./projection-toggle";
 import { RegenerateLinkButton } from "./regenerate-link-button";
@@ -20,6 +22,14 @@ export function ProjectionPanel({ eventId, settings, screenLink, canConfigure }:
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
       <div className="space-y-6">
         {canConfigure && <ProjectionToggle eventId={eventId} enabled={settings.enabled} expired={expired} />}
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-[14px] bg-primary p-6 text-on-paper">
+          <div>
+            <p className="eyebrow opacity-70">Durante la fiesta</p>
+            <p className="display mt-1 text-3xl">Control en vivo desde tu celular</p>
+            <p className="mt-1 text-sm opacity-80">Elegí qué pasa, fijá una foto, lanzá la selfie o el premio, y poné las fotos al ritmo.</p>
+          </div>
+          <Link href={`/panel/eventos/${eventId}/control`} className={buttonClass("dark", "md")}>Abrir control <Arrow /></Link>
+        </section>
         {canConfigure && (
           <Card className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -29,6 +39,7 @@ export function ProjectionPanel({ eventId, settings, screenLink, canConfigure }:
             <Link href={`/panel/eventos/${eventId}/apariencia`} className={buttonClass("primary", "md")}>Editar apariencia <Arrow /></Link>
           </Card>
         )}
+        {canConfigure && <FeaturesForm eventId={eventId} initial={readFeatures(settings.features)} />}
         {canConfigure && (
           <Card>
             <CardTitle className="mb-6">Cómo se reproduce</CardTitle>

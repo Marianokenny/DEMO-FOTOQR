@@ -2,6 +2,7 @@
 
 import { Camera, Check, Plus, RotateCcw, Video, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Mascot } from "@/components/brand/mascot";
 import { compressPhoto } from "./compress";
 
 type Limits = { allowVideos: boolean; maxPhotoMb: number; maxVideoMb: number; maxVideoSeconds: number; maxFiles: number };
@@ -65,6 +66,7 @@ async function runPool<T>(items: T[], size: number, fn: (item: T) => Promise<voi
 
 export function GuestUploader({ token, event, limits }: { token: string; event: EventInfo; limits: Limits }) {
   const [name, setName] = useState("");
+  const [message, setMessage] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [phase, setPhase] = useState<"pick" | "sending" | "done">("pick");
   const [notice, setNotice] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export function GuestUploader({ token, event, limits }: { token: string; event: 
       const res = await fetchRetry(`/api/u/${token}/uploads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim() || undefined, files: batch.map(({ file }) => ({ name: file.name, size: file.size, type: file.type })) }),
+        body: JSON.stringify({ name: name.trim() || undefined, message: message.trim() || undefined, files: batch.map(({ file }) => ({ name: file.name, size: file.size, type: file.type })) }),
       });
       const body = res ? await res.json().catch(() => ({})) : {};
       if (!res?.ok) {
@@ -165,6 +167,7 @@ export function GuestUploader({ token, event, limits }: { token: string; event: 
     if (!failed.length) {
       itemsRef.current.forEach((i) => URL.revokeObjectURL(i.preview));
       setItems([]);
+      setMessage("");
       setPhase("done");
       return;
     }
@@ -180,6 +183,7 @@ export function GuestUploader({ token, event, limits }: { token: string; event: 
 
   return (
     <main className="min-h-dvh bg-paper pb-36 text-on-paper">
+      {sentCount > 0 && <OnScreenAlerts token={token} color={event.color} />}
       <div className="h-2" style={{ background: event.color }} />
       <div className="mx-auto max-w-lg px-5 pt-8">
         <p className="eyebrow text-on-paper-muted">{event.date}</p>
@@ -187,11 +191,14 @@ export function GuestUploader({ token, event, limits }: { token: string; event: 
 
         {phase === "done" ? (
           <section className="mt-10 text-center">
-            <span className="mx-auto grid size-20 place-items-center rounded-full" style={{ background: event.color, color: event.colorText }}>
-              <Check className="size-10" strokeWidth={2.5} />
-            </span>
+            <div className="mx-auto w-36" style={{ animation: "fq-pop 800ms cubic-bezier(.2,.8,.2,1) both" }}>
+              <div style={{ animation: "fq-hover 2s ease-in-out infinite" }}>
+                <Mascot mood="happy" className="w-full drop-shadow-xl" />
+              </div>
+            </div>
             <h2 className="display mt-6 text-5xl">¡Gracias{name.trim() ? `, ${name.trim().split(" ")[0]}` : ""}!</h2>
             <p className="mt-3 text-lg text-on-paper-muted">Tus fotos ya están en camino a la pantalla grande.</p>
+            <OnScreenOptIn />
             <button onClick={() => { setPhase("pick"); setNotice(null); }} className="mt-8 inline-flex h-14 items-center gap-2 rounded-full bg-on-paper px-8 text-lg font-semibold text-paper">
               <Plus className="size-5" /> Subir más
             </button>
@@ -210,6 +217,23 @@ export function GuestUploader({ token, event, limits }: { token: string; event: 
                 disabled={phase === "sending"}
                 className="mt-2 h-14 w-full rounded-[12px] border border-on-paper/20 bg-white/70 px-4 text-lg outline-none placeholder:text-on-paper-muted/60 focus:border-on-paper"
               />
+            </label>
+
+            <label className="mt-5 block">
+              <span className="flex items-baseline justify-between">
+                <span className="eyebrow text-on-paper-muted">Dejá un saludo (opcional)</span>
+                <span className="font-mono text-xs text-on-paper-muted">{message.length}/140</span>
+              </span>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                maxLength={140}
+                rows={2}
+                placeholder="¡Felices 15, Sofi! Te queremos 💛"
+                disabled={phase === "sending"}
+                className="mt-2 w-full resize-none rounded-[12px] border border-on-paper/20 bg-white/70 px-4 py-3 text-lg outline-none placeholder:text-on-paper-muted/60 focus:border-on-paper"
+              />
+              <span className="text-sm text-on-paper-muted">Puede salir en la pantalla junto a tu foto.</span>
             </label>
 
             <div className={`mt-5 grid gap-3 ${limits.allowVideos ? "grid-cols-2" : "grid-cols-1"}`}>
@@ -291,5 +315,74 @@ export function GuestUploader({ token, event, limits }: { token: string; event: 
         </div>
       )}
     </main>
+  );
+}
+
+type Alert = { type: "upcoming" | "onscreen"; thumbUrl: string | null; key: number };
+
+/** Listens for "your photo is next / on screen" while the page is open, and shows a big animated banner. */
+function OnScreenAlerts({ token, color }: { token: string; color: string }) {
+  const [alert, setAlert] = useState<Alert | null>(null);
+  useEffect(() => {
+    let hide: ReturnType<typeof setTimeout> | undefined;
+    const es = new EventSource(`/api/u/${token}/stream`);
+    es.onmessage = (e) => {
+      const msg = JSON.parse(e.data) as { type: "upcoming" | "onscreen"; thumbUrl: string | null };
+      setAlert({ ...msg, key: Date.now() });
+      if (navigator.vibrate) navigator.vibrate(msg.type === "onscreen" ? [200, 100, 200, 100, 400] : [150, 80, 150]);
+      if (document.visibilityState === "hidden" && "Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification(msg.type === "onscreen" ? "¡Tu foto está en pantalla!" : "¡Tu foto está por salir!", { body: "Mirá la pantalla grande 👀", icon: msg.thumbUrl ?? undefined, tag: "fotosqr" });
+        } catch { /* some browsers only allow it from a service worker */ }
+      }
+      clearTimeout(hide);
+      hide = setTimeout(() => setAlert(null), msg.type === "onscreen" ? 9000 : 7000);
+    };
+    return () => { es.close(); clearTimeout(hide); };
+  }, [token]);
+
+  if (!alert) return null;
+  const now = alert.type === "onscreen";
+  return (
+    <div key={alert.key} className="fixed inset-x-0 top-0 z-50 p-3" role="alert" onClick={() => setAlert(null)}>
+      <div
+        className="flex items-center gap-4 rounded-[18px] p-4 shadow-2xl"
+        style={{ background: now ? color : "#15120E", color: now ? "#15120E" : "#F3ECE0", animation: "fq-pop 700ms cubic-bezier(.2,.8,.2,1) both" }}
+      >
+        {alert.thumbUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={alert.thumbUrl} alt="" className="size-16 shrink-0 rounded-[10px] object-cover" style={{ animation: now ? "fq-wiggle 900ms ease-in-out infinite" : undefined }} />
+        )}
+        <div className="min-w-0">
+          <p className="font-mono text-[11px] uppercase tracking-[0.25em] opacity-70">{now ? "Ahora mismo" : "Preparate"}</p>
+          <p className="display text-3xl leading-tight">{now ? "¡Tu foto está en pantalla!" : "¡Tu foto está por salir!"}</p>
+          <p className="text-sm opacity-80">{now ? "Mirá la pantalla grande con tus amigos 🎉" : "Mirá la pantalla grande 👀"}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Offers a system notification when the photo is about to show, if the browser supports it. */
+function OnScreenOptIn() {
+  const [state, setState] = useState<"unsupported" | "default" | "granted" | "denied">("unsupported");
+  useEffect(() => {
+    if ("Notification" in window) setState(Notification.permission as "default" | "granted" | "denied");
+  }, []);
+  return (
+    <div className="mx-auto mt-6 max-w-sm rounded-[14px] border border-on-paper/15 bg-white/60 p-4 text-left">
+      <p className="font-semibold">👀 Te avisamos cuando salga tu foto</p>
+      <p className="mt-1 text-sm text-on-paper-muted">Dejá esta página abierta: cuando tu foto esté por aparecer en la pantalla, el celular vibra y te mostramos un aviso.</p>
+      {state === "default" && (
+        <button
+          type="button"
+          onClick={() => Notification.requestPermission().then((p) => setState(p as "default" | "granted" | "denied"))}
+          className="mt-3 h-11 rounded-full bg-on-paper px-5 text-sm font-semibold text-paper"
+        >
+          Activar avisos
+        </button>
+      )}
+      {state === "granted" && <p className="mt-2 text-sm font-semibold">Avisos activados ✓</p>}
+    </div>
   );
 }

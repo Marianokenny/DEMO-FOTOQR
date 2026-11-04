@@ -1,3 +1,4 @@
+import { Mascot } from "@/components/brand/mascot";
 import { Logo } from "@/components/logo";
 import { Arrow, ButtonLink } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
@@ -24,7 +25,10 @@ export default async function Home() {
         )}
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:pt-24">
+      <section className="relative mx-auto max-w-6xl px-5 pb-16 pt-14 sm:pt-24">
+        <div className="pointer-events-none absolute -top-2 right-2 hidden w-[230px] lg:block xl:-right-10 xl:w-[270px]" style={{ animation: "fq-hover 2.2s ease-in-out infinite" }} aria-hidden>
+          <Mascot className="w-full drop-shadow-2xl" />
+        </div>
         <p className="eyebrow text-primary">15 · Casamientos · Cumpleaños · Empresas</p>
         <h1 className="display mt-6 max-w-5xl text-[56px] sm:text-[104px]">
           Las fotos de tus invitados, <em className="text-primary">en vivo</em> en la pantalla grande.

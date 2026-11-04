@@ -95,3 +95,29 @@ input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(0.85) sepia(0.2);
 }
+
+/* ---------- Screen show animations ---------- */
+@keyframes fq-rise { from { opacity: 0; transform: translateY(6cqh) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes fq-slide-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes fq-pop { 0% { opacity: 0; transform: scale(0.55) rotate(-5deg); } 65% { opacity: 1; transform: scale(1.05) rotate(1.5deg); } 100% { opacity: 1; transform: none; } }
+@keyframes fq-ring { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.7); opacity: 0; } }
+@keyframes fq-word { from { opacity: 0; transform: translateY(0.45em); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes fq-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes fq-beat { 0% { transform: scale(1.03); } 35% { transform: scale(1); } 100% { transform: scale(1); } }
+@keyframes fq-fall { 0% { transform: translate3d(0, -12cqh, 0) rotate(0deg); } 100% { transform: translate3d(var(--fq-drift, 0), 112cqh, 0) rotate(var(--fq-spin, 540deg)); } }
+@keyframes fq-count { 0% { opacity: 0; transform: scale(1.8); } 15% { opacity: 1; transform: scale(1); } 85% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.85); } }
+@keyframes fq-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes fq-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes fq-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes fq-wiggle { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes fq-glow { 0%, 100% { box-shadow: 0 0 0 0 rgb(255 91 46 / 0.55); } 50% { box-shadow: 0 0 0 2.2cqh rgb(255 91 46 / 0); } }
+@keyframes fq-toast { 0% { opacity: 0; transform: translateY(-120%); } 12%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-120%); } }
+
+/* ---------- Mascot ---------- */
+@keyframes fq-jet { from { transform: scaleY(0.8); opacity: 0.75; } to { transform: scaleY(1.15); opacity: 1; } }
+@keyframes fq-antenna { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes fq-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes fq-hover { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.2cqh); } }
+@keyframes fq-scanline { 0% { top: 4%; } 50% { top: 92%; } 100% { top: 4%; } }
+@keyframes fq-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.35; } 50% { transform: scaleX(0.82); opacity: 0.22; } }
+@keyframes fq-heart { 0% { opacity: 0; transform: translateY(0) scale(0.4); } 30% { opacity: 1; transform: translateY(-4cqh) scale(1); } 100% { opacity: 0; transform: translateY(-14cqh) scale(0.9); } }

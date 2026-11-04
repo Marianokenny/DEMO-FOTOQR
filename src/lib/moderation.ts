@@ -13,7 +13,7 @@ type Actor = Pick<User, "id" | "role">;
 
 /** Media as the panel sees it, with short-lived URLs for thumbnails and the full view. */
 export type MediaItem = {
-  id: string; type: MediaType; status: MediaStatus; senderName: string | null; createdAt: string;
+  id: string; type: MediaType; status: MediaStatus; senderName: string | null; message: string | null; createdAt: string;
   width: number | null; height: number | null; durationMs: number | null;
   thumbUrl: string | null; displayUrl: string | null; posterUrl: string | null;
 };
@@ -24,7 +24,7 @@ async function sign(key: string | null, ttl = 3600) {
 
 export async function toItem(m: Prisma.MediaGetPayload<object>): Promise<MediaItem> {
   return {
-    id: m.id, type: m.type, status: m.status, senderName: m.senderName, createdAt: m.createdAt.toISOString(),
+    id: m.id, type: m.type, status: m.status, senderName: m.senderName, message: m.message, createdAt: m.createdAt.toISOString(),
     width: m.width, height: m.height, durationMs: m.durationMs,
     thumbUrl: await sign(m.thumbKey), displayUrl: await sign(m.displayKey), posterUrl: await sign(m.posterKey),
   };
