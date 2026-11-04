@@ -1,0 +1,40 @@
+import { z } from "zod";
+import { parseLocalDateTime } from "./dates";
+
+export const EVENT_TYPES = ["quince", "wedding", "birthday", "party", "corporate", "other"] as const;
+
+export const EVENT_TYPE_LABELS: Record<(typeof EVENT_TYPES)[number], string> = {
+  quince: "Cumpleaños de 15",
+  wedding: "Casamiento",
+  birthday: "Cumpleaños",
+  party: "Fiesta",
+  corporate: "Evento empresarial",
+  other: "Otro",
+};
+
+export const registerSchema = z.object({
+  name: z.string().trim().min(2, "Ingresá tu nombre.").max(80),
+  email: z.string().trim().toLowerCase().email("Ingresá un email válido."),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres.").max(200),
+});
+
+export const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Ingresá un email válido."),
+  password: z.string().min(1, "Ingresá tu contraseña."),
+});
+
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Color inválido.");
+
+export const eventInputSchema = z.object({
+  name: z.string().trim().min(2, "Ingresá el nombre del evento.").max(120),
+  type: z.enum(EVENT_TYPES),
+  date: z.preprocess(
+    (v) => (typeof v === "string" && v ? parseLocalDateTime(v) : v),
+    z.date({ errorMap: () => ({ message: "Ingresá una fecha y hora válidas." }) }).refine((d) => !Number.isNaN(d.getTime()), "Ingresá una fecha y hora válidas."),
+  ),
+  venue: z.string().trim().max(160).optional().transform((v) => (v ? v : undefined)),
+  brandColor: hexColor.default("#8B5CF6"),
+  storageDays: z.coerce.number().int().min(1).max(365).default(30),
+});
+
+export type EventInput = z.infer<typeof eventInputSchema>;

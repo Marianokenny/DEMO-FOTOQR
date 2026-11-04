@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  organizer
+}
+
+enum EventType {
+  quince
+  wedding
+  birthday
+  party
+  corporate
+  other
+}
+
+enum EventStatus {
+  active
+  archived
+}
+
+enum MemberRole {
+  owner
+  moderator
+}
+
+enum LinkType {
+  upload
+  screen
+  gallery
+}
+
+enum MediaType {
+  photo
+  video
+}
+
+enum MediaStatus {
+  uploading
+  processing
+  pending
+  approved
+  rejected
+  failed
+  deleted
+}
+
+enum AssetUsage {
+  cover
+  background
+  layer
+}
+
+enum VideoMode {
+  full
+  capped
+}
+
+enum PlayOrder {
+  newest_first
+  chronological
+  random
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String
+  passwordHash String
+  role         UserRole      @default(organizer)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  sessions     Session[]
+  ownedEvents  Event[]       @relation("EventOwner")
+  memberships  EventMember[]
+  moderated    Media[]       @relation("ModeratedBy")
+}
+
+model Session {
+  id        String   @id // sha256 of the cookie token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Event {
+  id           String      @id @default(cuid())
+  ownerId      String
+  owner        User        @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  name         String
+  type         EventType   @default(other)
+  date         DateTime
+  venue        String?
+  coverKey     String?
+  brandColor   String      @default("#8B5CF6")
+  status       EventStatus @default(active)
+  storageUntil DateTime
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  members            EventMember[]
+  links              AccessLink[]
+  projectionSettings ProjectionSettings?
+  uploadSettings     UploadSettings?
+  guestSessions      GuestSession[]
+  media              Media[]
+  assets             Asset[]
+
+  @@index([ownerId])
+}
+
+model EventMember {
+  eventId   String
+  userId    String
+  role      MemberRole
+  createdAt DateTime   @default(now())
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+  @@index([userId])
+}
+
+model AccessLink {
+  id        String    @id @default(cuid())
+  eventId   String
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  type      LinkType
+  token     String    @unique
+  expiresAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([eventId, type])
+}
+
+model ProjectionSettings {
+  eventId          String    @id
+  event            Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  enabled          Boolean   @default(false)
+  expiresAt        DateTime?
+  autoApprove      Boolean   @default(false)
+  photoSeconds     Int       @default(8)
+  videoMode        VideoMode @default(full)
+  videoMaxSeconds  Int       @default(30)
+  videoMuted       Boolean   @default(true)
+  transition       String    @default("fade")
+  playOrder        PlayOrder @default(newest_first)
+  showSenderName   Boolean   @default(true)
+  appearance       Json      @default("{}")
+  version          Int       @default(1)
+  updatedAt        DateTime  @updatedAt
+}
+
+model UploadSettings {
+  eventId           String   @id
+  event             Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  allowVideos       Boolean  @default(true)
+  maxPhotoMb        Int      @default(25)
+  maxVideoMb        Int      @default(300)
+  maxVideoSeconds   Int      @default(60)
+  maxFilesPerGuest  Int      @default(50)
+  updatedAt         DateTime @updatedAt
+}
+
+model GuestSession {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  name      String?
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  media     Media[]
+
+  @@index([eventId])
+}
+
+model Media {
+  id             String        @id @default(cuid())
+  eventId        String
+  event          Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guestSessionId String?
+  guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
+  senderName     String?
+  type           MediaType
+  status         MediaStatus   @default(uploading)
+  originalKey    String
+  displayKey     String?
+  thumbKey       String?
+  posterKey      String?
+  width          Int?
+  height         Int?
+  durationMs     Int?
+  sizeBytes      BigInt?
+  mimeType       String?
+  sha256         String?
+  failReason     String?
+  moderatedById  String?
+  moderatedBy    User?         @relation("ModeratedBy", fields: [moderatedById], references: [id], onDelete: SetNull)
+  moderatedAt    DateTime?
+  approvedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([eventId, status, createdAt])
+  @@index([eventId, type])
+}
+
+model Asset {
+  id        String     @id @default(cuid())
+  eventId   String
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  usage     AssetUsage
+  key       String
+  mimeType  String
+  width     Int?
+  height    Int?
+  createdAt DateTime   @default(now())
+
+  @@index([eventId])
+}

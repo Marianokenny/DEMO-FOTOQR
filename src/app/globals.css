@@ -1,26 +1,82 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0b0814;
+  --bg-elevated: #130e22;
+  --surface: #191230;
+  --surface-2: #221a3d;
+  --border: rgba(167, 139, 250, 0.14);
+  --border-strong: rgba(167, 139, 250, 0.28);
+  --text: #f4f1fb;
+  --text-muted: #a69cc4;
+  --text-faint: #6f6690;
+  --primary: #8b5cf6;
+  --primary-2: #c026d3;
+  --primary-soft: rgba(139, 92, 246, 0.16);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-glow {
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, rgba(192, 38, 211, 0.18), transparent 60%),
+    radial-gradient(50rem 30rem at -10% 10%, rgba(139, 92, 246, 0.22), transparent 60%),
+    var(--bg);
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #c4b5fd, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  box-shadow: 0 8px 24px -8px rgba(168, 85, 247, 0.6);
+}
+.btn-gradient:hover {
+  filter: brightness(1.08);
+}
+
+.card-hero {
+  background:
+    radial-gradient(40rem 16rem at 100% 0%, rgba(192, 38, 211, 0.25), transparent 60%),
+    linear-gradient(160deg, #2a1a52, #170f2c 70%);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
 }
