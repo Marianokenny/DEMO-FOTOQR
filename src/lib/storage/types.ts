@@ -10,6 +10,8 @@ export interface StorageDriver {
   download(key: string, filePath: string): Promise<void>;
   /** Size in bytes, or null when the object does not exist. */
   size(key: string): Promise<number | null>;
+  /** Streams an object (ZIP downloads). */
+  openRead(key: string): Promise<import("node:stream").Readable>;
   delete(key: string): Promise<void>;
   deletePrefix(prefix: string): Promise<void>;
 }

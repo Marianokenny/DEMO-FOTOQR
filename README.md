@@ -16,7 +16,7 @@ cp .env.example .env        # completar DATABASE_URL
 npm install
 npx prisma migrate deploy
 npm run dev                 # http://localhost:3000
-npm run worker              # en otra terminal: procesa fotos y videos
+npm run worker              # en otra terminal: procesa fotos y videos y, cada 15 min, borra los archivos de eventos vencidos
 ```
 
 Por defecto los archivos se guardan en disco (`STORAGE_DRIVER=local`). Para Cloudflare R2 u otro almacenamiento S3, poné `STORAGE_DRIVER=s3` y completá las variables `S3_*`.
@@ -31,4 +31,4 @@ npm test
 
 ## Estado
 
-Etapas 1 a 5 de 7: base, login, eventos y permisos; link y QR para invitados, carga desde celulares y procesamiento; moderación en vivo; pantalla de proyección en tiempo real.
+Etapas 1 a 6 de 7: base, login, eventos y permisos; link y QR para invitados, carga desde celulares y procesamiento; moderación en vivo; pantalla de proyección en tiempo real.

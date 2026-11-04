@@ -1,5 +1,6 @@
-import { Worker } from "bullmq";
+import { Queue, Worker } from "bullmq";
 import { db } from "../lib/db";
+import { purgeExpiredEvents } from "../lib/gallery";
 import { processMedia } from "../lib/media/process";
 import { MEDIA_QUEUE, type MediaJob } from "../lib/queue";
 import { newRedisConnection } from "../lib/redis";
@@ -20,10 +21,27 @@ worker.on("failed", async (job, err) => {
   }
 });
 
+// Housekeeping: deletes the files of events whose storage period ended.
+const MAINTENANCE_QUEUE = "maintenance";
+const maintenanceQueue = new Queue(MAINTENANCE_QUEUE, { connection: newRedisConnection() });
+void maintenanceQueue.upsertJobScheduler("purge-expired", { every: 15 * 60 * 1000 }, { name: "purge-expired" });
+const maintenance = new Worker(
+  MAINTENANCE_QUEUE,
+  async () => {
+    const n = await purgeExpiredEvents();
+    if (n) console.log(`[mantenimiento] archivos borrados de ${n} evento(s) vencido(s)`);
+    return n;
+  },
+  { connection: newRedisConnection(), concurrency: 1 },
+);
+maintenance.on("failed", (_job, err) => console.error("[mantenimiento] error:", err.message));
+
 console.log(`[media] worker listo (concurrencia ${concurrency})`);
 
 async function shutdown() {
   await worker.close();
+  await maintenance.close();
+  await maintenanceQueue.close();
   await db.$disconnect();
   process.exit(0);
 }

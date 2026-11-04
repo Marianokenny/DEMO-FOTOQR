@@ -44,6 +44,11 @@ export class S3Storage implements StorageDriver {
     await pipeline(res.Body as Readable, createWriteStream(filePath));
   }
 
+  async openRead(key: string) {
+    const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+    return res.Body as Readable;
+  }
+
   async size(key: string) {
     try {
       const res = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));

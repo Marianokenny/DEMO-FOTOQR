@@ -105,6 +105,7 @@ model Event {
   brandColor   String      @default("#FF5B2E")
   status       EventStatus @default(active)
   storageUntil DateTime
+  filesDeletedAt DateTime?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 

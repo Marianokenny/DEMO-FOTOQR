@@ -55,6 +55,10 @@ export class LocalStorage implements StorageDriver {
     await rm(this.pathFor(prefix.replace(/\/$/, "")), { recursive: true, force: true });
   }
 
+  async openRead(key: string) {
+    return this.readStream(key);
+  }
+
   readStream(key: string) {
     return createReadStream(this.pathFor(key));
   }

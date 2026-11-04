@@ -55,7 +55,7 @@ export function ProjectionPanel({ eventId, settings, screenLink, canConfigure }:
           {url ? (
             <>
               <p className="mt-5 break-all rounded-[10px] bg-white/70 px-4 py-3 font-mono text-sm">{url}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2 [&_button]:border-on-paper/25 [&_button]:text-on-paper">
                 <a href={url} target="_blank" rel="noreferrer" className={buttonClass("dark", "md")}>Entrar a la proyección ↗</a>
                 <CopyButton text={url} />
               </div>

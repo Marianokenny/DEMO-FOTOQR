@@ -44,6 +44,9 @@ export async function createEvent(owner: Pick<User, "id">, input: EventInput) {
 
 export async function updateEvent(user: Pick<User, "id" | "role">, eventId: string, input: EventInput) {
   await assertCan(user, eventId, "configure");
+  const storageUntil = storageUntilFrom(input.date, input.storageDays);
+  // The shared gallery link lives exactly as long as the files.
+  await db.accessLink.updateMany({ where: { eventId, type: "gallery", revokedAt: null }, data: { expiresAt: storageUntil } });
   return db.event.update({
     where: { id: eventId },
     data: {
@@ -52,7 +55,7 @@ export async function updateEvent(user: Pick<User, "id" | "role">, eventId: stri
       date: input.date,
       venue: input.venue ?? null,
       brandColor: input.brandColor,
-      storageUntil: storageUntilFrom(input.date, input.storageDays),
+      storageUntil,
     },
   });
 }

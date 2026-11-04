@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { deleteEventAction, updateEventAction } from "@/app/actions/events";
 import { DeleteEventButton } from "@/components/panel/delete-event-button";
 import { EventForm } from "@/components/panel/event-form";
+import { GalleryPanel } from "@/components/panel/gallery-panel";
 import { GuestLinkPanel } from "@/components/panel/guest-link-panel";
 import { ModerationBoard } from "@/components/panel/moderation-board";
 import { ProjectionPanel } from "@/components/panel/projection-panel";
@@ -13,6 +14,7 @@ import { requireUser } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 import { formatDate, toLocalInputValue } from "@/lib/dates";
 import { getEventForUser, getEventStats } from "@/lib/events";
+import { buildGallery } from "@/lib/gallery";
 import { ForbiddenError, getEventRole, roleAllows } from "@/lib/permissions";
 import { EVENT_TYPE_LABELS } from "@/lib/validation";
 
@@ -21,7 +23,7 @@ const TABS = [
   { id: "proyeccion", label: "Proyección" },
   { id: "invitados", label: "Link para invitados" },
   { id: "moderacion", label: "Moderación" },
-  { id: "galeria", label: "Galería", stage: 6 },
+  { id: "galeria", label: "Galería" },
   { id: "configuracion", label: "Configuración" },
 ] as const;
 
@@ -46,7 +48,6 @@ export default async function EventPage({ params, searchParams }: {
   const canConfigure = roleAllows(role, "configure");
   const stats = await getEventStats(id);
   const tab: TabId = TABS.some((t) => t.id === rawTab) ? (rawTab as TabId) : "resumen";
-  const active = TABS.find((t) => t.id === tab)!;
   const screenLink = event.links.find((l) => l.type === "screen");
 
   return (
@@ -80,7 +81,6 @@ export default async function EventPage({ params, searchParams }: {
                 )}
               >
                 {t.label}
-                {"stage" in t && <span className="font-mono text-[10px] text-faint">E{t.stage}</span>}
               </Link>
             </li>
           ))}
@@ -119,6 +119,10 @@ export default async function EventPage({ params, searchParams }: {
         <ModerationBoard eventId={event.id} initialAutoApprove={event.projectionSettings!.autoApprove} canConfigure={canConfigure} />
       )}
 
+      {tab === "galeria" && (
+        <GalleryPanel gallery={await buildGallery(event.id)} link={event.links.find((l) => l.type === "gallery")} canConfigure={canConfigure} />
+      )}
+
       {tab === "invitados" && (
         <GuestLinkPanel
           eventId={event.id}
@@ -150,13 +154,6 @@ export default async function EventPage({ params, searchParams }: {
         </div>
       )}
 
-      {"stage" in active && (
-        <div className="rounded-[14px] border border-dashed border-line-strong px-6 py-20 text-center">
-          <p className="eyebrow text-primary">Etapa {active.stage}</p>
-          <h2 className="display mt-3 text-5xl">{active.label}</h2>
-          <p className="mt-3 text-muted">Esta sección llega en la etapa {active.stage} del plan.</p>
-        </div>
-      )}
     </div>
   );
 }
