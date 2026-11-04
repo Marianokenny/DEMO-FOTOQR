@@ -1,21 +1,26 @@
 @import "tailwindcss";
 
+/* FOTOSQR — "noche y papel": warm night background, paper-cream text, one loud tangerine accent. */
 :root {
-  --bg: #0b0814;
-  --bg-elevated: #130e22;
-  --surface: #191230;
-  --surface-2: #221a3d;
-  --border: rgba(167, 139, 250, 0.14);
-  --border-strong: rgba(167, 139, 250, 0.28);
-  --text: #f4f1fb;
-  --text-muted: #a69cc4;
-  --text-faint: #6f6690;
-  --primary: #8b5cf6;
-  --primary-2: #c026d3;
-  --primary-soft: rgba(139, 92, 246, 0.16);
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
+  --bg: #0f0e0c;
+  --bg-elevated: #15130f;
+  --surface: #1a1815;
+  --surface-2: #24211c;
+  --paper: #f3ece0;
+  --paper-2: #e8dfcf;
+  --border: rgba(243, 236, 224, 0.1);
+  --border-strong: rgba(243, 236, 224, 0.22);
+  --text: #f3ece0;
+  --text-muted: #a39c90;
+  --text-faint: #6e685e;
+  --on-paper: #15120e;
+  --on-paper-muted: #6b6255;
+  --primary: #ff5b2e;
+  --primary-hover: #ff7a54;
+  --primary-soft: rgba(255, 91, 46, 0.12);
+  --success: #7fd69b;
+  --warning: #f5b83d;
+  --danger: #ff6b6b;
 }
 
 @theme inline {
@@ -23,18 +28,24 @@
   --color-bg-elevated: var(--bg-elevated);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
   --color-line: var(--border);
   --color-line-strong: var(--border-strong);
   --color-ink: var(--text);
   --color-muted: var(--text-muted);
   --color-faint: var(--text-faint);
+  --color-on-paper: var(--on-paper);
+  --color-on-paper-muted: var(--on-paper-muted);
   --color-primary: var(--primary);
-  --color-primary-2: var(--primary-2);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
 
 html {
@@ -46,37 +57,41 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01";
 }
 
-.bg-glow {
-  background:
-    radial-gradient(60rem 30rem at 85% -10%, rgba(192, 38, 211, 0.18), transparent 60%),
-    radial-gradient(50rem 30rem at -10% 10%, rgba(139, 92, 246, 0.22), transparent 60%),
-    var(--bg);
+/* Film-grain texture so flat surfaces don't look rendered. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.text-gradient {
-  background: linear-gradient(90deg, #c4b5fd, #f0abfc);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.btn-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--primary-2));
-  box-shadow: 0 8px 24px -8px rgba(168, 85, 247, 0.6);
-}
-.btn-gradient:hover {
-  filter: brightness(1.08);
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 0.98;
 }
 
-.card-hero {
-  background:
-    radial-gradient(40rem 16rem at 100% 0%, rgba(192, 38, 211, 0.25), transparent 60%),
-    linear-gradient(160deg, #2a1a52, #170f2c 70%);
+::selection {
+  background: var(--primary);
+  color: var(--on-paper);
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.8);
+  filter: invert(0.85) sepia(0.2);
 }

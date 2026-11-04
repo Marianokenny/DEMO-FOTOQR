@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { CalendarDays, ImageIcon, MapPin, Plus, Tv } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ButtonLink } from "@/components/ui/button";
-import { EventTypeIcon } from "@/components/panel/event-type-icon";
+import { Arrow, ButtonLink } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
 import { listEventsForUser } from "@/lib/events";
@@ -15,54 +13,42 @@ export default async function PanelPage() {
   const events = await listEventsForUser(user);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-10">
+      <div className="flex flex-wrap items-end justify-between gap-6 border-b border-line pb-8">
         <div>
-          <p className="text-sm font-medium text-violet-300">Hola, {user.name.split(" ")[0]}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Mis eventos</h1>
+          <p className="eyebrow text-primary">Hola, {user.name.split(" ")[0]}</p>
+          <h1 className="display mt-3 text-6xl sm:text-7xl">Mis <em>eventos</em></h1>
         </div>
-        <ButtonLink href="/panel/eventos/nuevo" size="md">
-          <Plus className="size-4" /> Nuevo evento
-        </ButtonLink>
+        <ButtonLink href="/panel/eventos/nuevo">+ Nuevo evento</ButtonLink>
       </div>
 
       {events.length === 0 ? (
-        <div className="card-hero rounded-3xl border border-line-strong p-8 text-center sm:p-12">
-          <span className="mx-auto grid size-14 place-items-center rounded-2xl btn-gradient">
-            <Tv className="size-7 text-white" />
-          </span>
-          <h2 className="mt-5 text-xl font-bold">Creá tu primer evento</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-            Generá un QR para tus invitados y mostrá sus fotos y videos en vivo en la pantalla del salón.
-          </p>
-          <ButtonLink href="/panel/eventos/nuevo" size="lg" className="mt-6">
-            <Plus className="size-4" /> Crear evento
-          </ButtonLink>
+        <div className="rounded-[14px] bg-paper p-8 text-on-paper sm:p-14">
+          <p className="eyebrow text-on-paper-muted">Empecemos</p>
+          <h2 className="display mt-4 max-w-xl text-5xl sm:text-6xl">Tu primer evento está a <em className="text-primary">un minuto</em>.</h2>
+          <p className="mt-4 max-w-md text-on-paper-muted">Lo creás, imprimís el QR y listo: las fotos de los invitados empiezan a llegar.</p>
+          <ButtonLink href="/panel/eventos/nuevo" variant="dark" size="lg" className="mt-8">Crear evento <Arrow /></ButtonLink>
         </div>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((e) => (
             <li key={e.id}>
               <Link
                 href={`/panel/eventos/${e.id}`}
-                className="group block h-full rounded-2xl border border-line bg-surface p-5 transition hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-2"
+                className="group flex h-full flex-col rounded-[14px] border border-line bg-surface transition-colors hover:border-line-strong"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="grid size-11 place-items-center rounded-xl" style={{ background: `${e.brandColor}26`, color: e.brandColor }}>
-                    <EventTypeIcon type={e.type} className="size-5" />
-                  </span>
-                  {e.projectionSettings?.enabled ? (
-                    <Badge tone="success" dot>Proyección encendida</Badge>
-                  ) : (
-                    <Badge dot>Proyección apagada</Badge>
-                  )}
-                </div>
-                <h2 className="mt-4 line-clamp-1 text-lg font-semibold group-hover:text-white">{e.name}</h2>
-                <p className="text-sm text-faint">{EVENT_TYPE_LABELS[e.type]}</p>
-                <div className="mt-4 space-y-1.5 text-sm text-muted">
-                  <p className="flex items-center gap-2"><CalendarDays className="size-4 text-faint" /> {formatDate(e.date)}</p>
-                  {e.venue && <p className="flex items-center gap-2"><MapPin className="size-4 text-faint" /> <span className="line-clamp-1">{e.venue}</span></p>}
-                  <p className="flex items-center gap-2"><ImageIcon className="size-4 text-faint" /> {e._count.media} {e._count.media === 1 ? "contenido" : "contenidos"}</p>
+                <div className="h-1.5 rounded-t-[14px]" style={{ background: e.brandColor }} />
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="eyebrow text-muted">{formatDate(e.date, { day: "2-digit", month: "short", year: "numeric" }).replace(/\./g, "")}</span>
+                    {e.projectionSettings?.enabled ? <Badge tone="success" dot pulse>En vivo</Badge> : <Badge dot>Apagada</Badge>}
+                  </div>
+                  <h2 className="display mt-5 mb-8 text-4xl transition-colors group-hover:text-primary">{e.name}</h2>
+                  <p className="-mt-6 mb-8 text-sm text-muted">{EVENT_TYPE_LABELS[e.type]}{e.venue ? ` · ${e.venue}` : ""}</p>
+                  <div className="mt-auto flex items-center justify-between border-t border-line pt-4">
+                    <span className="font-mono text-sm text-muted"><span className="text-ink">{e._count.media}</span> {e._count.media === 1 ? "archivo" : "archivos"}</span>
+                    <span className="text-muted transition-transform group-hover:translate-x-1 group-hover:text-primary">→</span>
+                  </div>
                 </div>
               </Link>
             </li>

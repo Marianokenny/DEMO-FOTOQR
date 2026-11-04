@@ -33,7 +33,7 @@ export const eventInputSchema = z.object({
     z.date({ errorMap: () => ({ message: "Ingresá una fecha y hora válidas." }) }).refine((d) => !Number.isNaN(d.getTime()), "Ingresá una fecha y hora válidas."),
   ),
   venue: z.string().trim().max(160).optional().transform((v) => (v ? v : undefined)),
-  brandColor: hexColor.default("#8B5CF6"),
+  brandColor: hexColor.default("#FF5B2E"),
   storageDays: z.coerce.number().int().min(1).max(365).default(30),
 });
 

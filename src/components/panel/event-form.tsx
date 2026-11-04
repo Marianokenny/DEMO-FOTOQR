@@ -2,11 +2,11 @@
 
 import { useActionState, useState } from "react";
 import type { FormState } from "@/app/actions/auth";
-import { Button } from "@/components/ui/button";
+import { Arrow, Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/field";
 import { EVENT_TYPE_LABELS, EVENT_TYPES } from "@/lib/validation";
 
-const SWATCHES = ["#8B5CF6", "#C026D3", "#EC4899", "#F59E0B", "#10B981", "#3B82F6", "#E5E7EB"];
+const SWATCHES = ["#FF5B2E", "#E8B04B", "#D94F8A", "#7A5CFA", "#2FA38A", "#3E7BFA", "#F3ECE0"];
 
 export type EventFormDefaults = {
   name: string; type: string; date: string; venue: string; brandColor: string; storageDays: string;
@@ -19,7 +19,7 @@ export function EventForm({ action, defaults, submitLabel }: {
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const v = { ...defaults, ...state?.values };
-  const [color, setColor] = useState(v.brandColor || "#8B5CF6");
+  const [color, setColor] = useState(v.brandColor || "#FF5B2E");
   const err = (k: string) => state?.fieldErrors?.[k]?.[0];
 
   return (
@@ -48,7 +48,7 @@ export function EventForm({ action, defaults, submitLabel }: {
             {SWATCHES.map((s) => (
               <button
                 key={s} type="button" onClick={() => setColor(s)} aria-label={`Color ${s}`}
-                className={`size-8 rounded-full border-2 transition ${color.toLowerCase() === s.toLowerCase() ? "scale-110 border-white" : "border-transparent"}`}
+                className={`size-8 rounded-full border-2 transition ${color.toLowerCase() === s.toLowerCase() ? "scale-110 border-paper ring-2 ring-bg" : "border-transparent"}`}
                 style={{ background: s }}
               />
             ))}
@@ -62,8 +62,8 @@ export function EventForm({ action, defaults, submitLabel }: {
           </Select>
         </Field>
       </div>
-      <div className="flex justify-end">
-        <Button type="submit" size="lg" disabled={pending}>{pending ? "Guardando…" : submitLabel}</Button>
+      <div className="flex justify-end border-t border-line pt-6">
+        <Button type="submit" size="lg" disabled={pending}>{pending ? "Guardando…" : submitLabel} {!pending && <Arrow />}</Button>
       </div>
     </form>
   );

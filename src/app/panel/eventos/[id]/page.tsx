@@ -1,27 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, CheckCircle2, Images, LayoutDashboard, MapPin, QrCode, Settings, ShieldCheck, Tv } from "lucide-react";
 import { deleteEventAction, updateEventAction } from "@/app/actions/events";
 import { DeleteEventButton } from "@/components/panel/delete-event-button";
 import { EventForm } from "@/components/panel/event-form";
-import { EventTypeIcon } from "@/components/panel/event-type-icon";
 import { ProjectionCard } from "@/components/panel/projection-card";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { cn } from "@/lib/cn";
-import { formatDate, formatDateTime, toLocalInputValue } from "@/lib/dates";
+import { formatDate, toLocalInputValue } from "@/lib/dates";
 import { getEventForUser, getEventStats } from "@/lib/events";
 import { ForbiddenError, getEventRole, roleAllows } from "@/lib/permissions";
 import { EVENT_TYPE_LABELS } from "@/lib/validation";
 
 const TABS = [
-  { id: "resumen", label: "Resumen", icon: LayoutDashboard },
-  { id: "proyeccion", label: "Proyección", icon: Tv, stage: 4 },
-  { id: "invitados", label: "Link para invitados", icon: QrCode, stage: 2 },
-  { id: "moderacion", label: "Moderación", icon: ShieldCheck, stage: 3 },
-  { id: "galeria", label: "Galería", icon: Images, stage: 6 },
-  { id: "configuracion", label: "Configuración", icon: Settings },
+  { id: "resumen", label: "Resumen" },
+  { id: "proyeccion", label: "Proyección", stage: 4 },
+  { id: "invitados", label: "Link para invitados", stage: 2 },
+  { id: "moderacion", label: "Moderación", stage: 3 },
+  { id: "galeria", label: "Galería", stage: 6 },
+  { id: "configuracion", label: "Configuración" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -48,39 +45,37 @@ export default async function EventPage({ params, searchParams }: {
   const active = TABS.find((t) => t.id === tab)!;
 
   return (
-    <div className="space-y-6">
-      <Link href="/panel" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-        <ArrowLeft className="size-4" /> Mis eventos
-      </Link>
+    <div className="space-y-8">
+      <Link href="/panel" className="eyebrow inline-block text-muted hover:text-primary">← Mis eventos</Link>
 
-      <header className="flex flex-wrap items-center gap-4">
-        <span className="grid size-14 place-items-center rounded-2xl" style={{ background: `${event.brandColor}26`, color: event.brandColor }}>
-          <EventTypeIcon type={event.type} className="size-7" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">{event.name}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-            <span>{EVENT_TYPE_LABELS[event.type]}</span>
-            <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4 text-faint" />{formatDateTime(event.date)}</span>
-            {event.venue && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4 text-faint" />{event.venue}</span>}
-          </div>
+      <header className="flex flex-wrap items-end justify-between gap-6">
+        <div className="min-w-0">
+          <p className="eyebrow flex items-center gap-2 text-muted">
+            <span className="size-2 rounded-full" style={{ background: event.brandColor }} />
+            {EVENT_TYPE_LABELS[event.type]} · {role === "owner" ? "Dueño" : "Moderador"}
+          </p>
+          <h1 className="display mt-3 text-6xl sm:text-7xl">{event.name}</h1>
+          <p className="mt-3 text-muted">
+            {formatDate(event.date, { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
+            {event.venue && <> · {event.venue}</>}
+          </p>
         </div>
-        <Badge tone="primary">{role === "owner" ? "Dueño" : "Moderador"}</Badge>
       </header>
 
-      <nav className="-mx-4 overflow-x-auto px-4" aria-label="Secciones del evento">
-        <ul className="flex min-w-max gap-1 rounded-2xl border border-line bg-surface/70 p-1">
+      <nav className="-mx-5 overflow-x-auto border-b border-line px-5" aria-label="Secciones del evento">
+        <ul className="flex min-w-max gap-7">
           {TABS.filter((t) => t.id !== "configuracion" || canConfigure).map((t) => (
             <li key={t.id}>
               <Link
                 href={`?tab=${t.id}`}
                 scroll={false}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition",
-                  t.id === tab ? "bg-primary-soft text-white ring-1 ring-primary/40" : "text-muted hover:bg-surface-2 hover:text-ink",
+                  "-mb-px flex items-center gap-1.5 border-b-2 py-3.5 text-[15px] transition-colors",
+                  t.id === tab ? "border-primary font-semibold text-ink" : "border-transparent text-muted hover:text-ink",
                 )}
               >
-                <t.icon className="size-4" /> {t.label}
+                {t.label}
+                {"stage" in t && <span className="font-mono text-[10px] text-faint">E{t.stage}</span>}
               </Link>
             </li>
           ))}
@@ -88,9 +83,7 @@ export default async function EventPage({ params, searchParams }: {
       </nav>
 
       {guardado && (
-        <p className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
-          <CheckCircle2 className="size-4" /> Cambios guardados.
-        </p>
+        <p className="rounded-[10px] border border-success/40 px-4 py-3 text-sm text-success">Cambios guardados.</p>
       )}
 
       {tab === "resumen" && (
@@ -98,16 +91,16 @@ export default async function EventPage({ params, searchParams }: {
           <div className="lg:col-span-2">
             <ProjectionCard eventName={event.name} settings={event.projectionSettings!} stats={stats} />
           </div>
-          <Card className="space-y-4">
+          <Card>
             <CardTitle>Datos del evento</CardTitle>
-            <dl className="space-y-3 text-sm">
-              <Row label="Fecha">{formatDate(event.date, { dateStyle: "full" })}</Row>
+            <dl className="mt-5 text-[15px]">
+              <Row label="Fecha">{formatDate(event.date, { day: "numeric", month: "short", year: "numeric" })}</Row>
               <Row label="Lugar">{event.venue ?? "Sin indicar"}</Row>
-              <Row label="Fotos guardadas hasta">{formatDate(event.storageUntil)}</Row>
+              <Row label="Fotos hasta">{formatDate(event.storageUntil, { day: "numeric", month: "short", year: "numeric" })}</Row>
               <Row label="Color">
-                <span className="inline-flex items-center gap-2"><span className="size-4 rounded-full" style={{ background: event.brandColor }} />{event.brandColor}</span>
+                <span className="inline-flex items-center gap-2 font-mono text-sm"><span className="size-3.5 rounded-full" style={{ background: event.brandColor }} />{event.brandColor}</span>
               </Row>
-              <Row label="Enlaces generados">{event.links.length} de 3</Row>
+              <Row label="Enlaces">{event.links.length} de 3</Row>
             </dl>
           </Card>
         </div>
@@ -116,7 +109,7 @@ export default async function EventPage({ params, searchParams }: {
       {tab === "configuracion" && canConfigure && (
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-2">
-            <CardTitle className="mb-5">Datos del evento</CardTitle>
+            <CardTitle className="mb-6">Datos del evento</CardTitle>
             <EventForm
               action={updateEventAction.bind(null, event.id)}
               submitLabel="Guardar cambios"
@@ -127,8 +120,8 @@ export default async function EventPage({ params, searchParams }: {
               }}
             />
           </Card>
-          <Card className="h-fit space-y-3 border-danger/25">
-            <CardTitle>Zona de peligro</CardTitle>
+          <Card className="h-fit space-y-4 border-danger/30">
+            <CardTitle className="text-danger">Zona de peligro</CardTitle>
             <p className="text-sm text-muted">Borrar el evento elimina sus enlaces, la configuración y todo el contenido recibido.</p>
             <DeleteEventButton action={deleteEventAction.bind(null, event.id)} eventName={event.name} />
           </Card>
@@ -136,11 +129,11 @@ export default async function EventPage({ params, searchParams }: {
       )}
 
       {"stage" in active && (
-        <Card className="grid place-items-center py-16 text-center">
-          <span className="grid size-12 place-items-center rounded-2xl bg-primary-soft text-violet-200"><active.icon className="size-6" /></span>
-          <h2 className="mt-4 text-lg font-semibold">{active.label}</h2>
-          <p className="mt-1 text-sm text-muted">Esta sección llega en la etapa {active.stage} del plan.</p>
-        </Card>
+        <div className="rounded-[14px] border border-dashed border-line-strong px-6 py-20 text-center">
+          <p className="eyebrow text-primary">Etapa {active.stage}</p>
+          <h2 className="display mt-3 text-5xl">{active.label}</h2>
+          <p className="mt-3 text-muted">Esta sección llega en la etapa {active.stage} del plan.</p>
+        </div>
       )}
     </div>
   );
@@ -148,9 +141,9 @@ export default async function EventPage({ params, searchParams }: {
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-4 border-b border-line pb-3 last:border-0 last:pb-0">
+    <div className="flex justify-between gap-4 border-b border-line py-3 first:pt-0 last:border-0 last:pb-0">
       <dt className="text-muted">{label}</dt>
-      <dd className="text-right font-medium">{children}</dd>
+      <dd className="text-right">{children}</dd>
     </div>
   );
 }

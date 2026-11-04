@@ -1,50 +1,52 @@
-import { CheckCircle2, QrCode, ShieldCheck, Tv } from "lucide-react";
 import { Logo } from "@/components/logo";
-import { ButtonLink } from "@/components/ui/button";
+import { Arrow, ButtonLink } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
+
+const STEPS = [
+  { n: "01", t: "Escanean el QR", d: "Desde la mesa, con cualquier celular. Sin app y sin crear cuenta." },
+  { n: "02", t: "Vos moderás", d: "Aprobás cada foto a mano, o dejás que entren solas y sacás lo que no va." },
+  { n: "03", t: "Sale en pantalla", d: "En el LED, la tele o el proyector, en vivo y con el diseño de tu evento." },
+];
 
 export default async function Home() {
   const user = await getCurrentUser();
   return (
-    <main className="bg-glow min-h-dvh">
-      <header className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4">
+    <main className="min-h-dvh">
+      <header className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5">
         <Logo />
         {user ? (
-          <ButtonLink href="/panel" size="sm">Ir al panel</ButtonLink>
+          <ButtonLink href="/panel" size="sm" variant="secondary">Ir al panel <Arrow /></ButtonLink>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1">
             <ButtonLink href="/login" variant="ghost" size="sm">Ingresar</ButtonLink>
             <ButtonLink href="/registro" size="sm">Crear cuenta</ButtonLink>
           </div>
         )}
       </header>
-      <section className="mx-auto max-w-6xl px-4 pb-20 pt-12 text-center sm:pt-20">
-        <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface/70 px-3 py-1 text-xs font-semibold text-violet-200">
-          <span className="size-1.5 rounded-full bg-fuchsia-400" /> Para 15, casamientos, cumpleaños y empresas
-        </p>
-        <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-extrabold tracking-tight sm:text-6xl">
-          Las fotos de tus invitados, <span className="text-gradient">en vivo en la pantalla</span>
+
+      <section className="mx-auto max-w-6xl px-5 pb-16 pt-14 sm:pt-24">
+        <p className="eyebrow text-primary">15 · Casamientos · Cumpleaños · Empresas</p>
+        <h1 className="display mt-6 max-w-5xl text-[56px] sm:text-[104px]">
+          Las fotos de tus invitados, <em className="text-primary">en vivo</em> en la pantalla grande.
         </h1>
-        <p className="mx-auto mt-5 max-w-xl text-base text-muted sm:text-lg">
-          Escanean el QR, suben fotos y videos sin instalar nada, y vos decidís qué se proyecta.
-        </p>
-        <div className="mt-8 flex justify-center gap-3">
-          <ButtonLink href={user ? "/panel" : "/registro"} size="lg">Crear mi evento</ButtonLink>
+        <div className="mt-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <p className="max-w-md text-lg text-muted">
+            Un QR en cada mesa. Los invitados suben, vos aprobás, y el salón lo ve al instante.
+          </p>
+          <ButtonLink href={user ? "/panel" : "/registro"} size="lg">Crear mi evento <Arrow /></ButtonLink>
         </div>
-        <div className="mx-auto mt-16 grid max-w-4xl gap-4 text-left sm:grid-cols-3">
-          {[
-            { icon: QrCode, t: "QR para invitados", d: "Sin app ni registro. Desde cualquier celular." },
-            { icon: ShieldCheck, t: "Moderación", d: "Aprobá a mano o dejá la aprobación automática." },
-            { icon: Tv, t: "Proyección en vivo", d: "Pantalla completa, transiciones y tu propio diseño." },
-          ].map(({ icon: Icon, t, d }) => (
-            <div key={t} className="rounded-2xl border border-line bg-surface/70 p-5">
-              <Icon className="size-6 text-violet-300" />
-              <p className="mt-3 font-semibold">{t}</p>
-              <p className="mt-1 text-sm text-muted">{d}</p>
-            </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 pb-24">
+        <ol className="grid border-t border-line sm:grid-cols-3">
+          {STEPS.map((s) => (
+            <li key={s.n} className="border-b border-line py-8 sm:border-b-0 sm:border-r sm:px-8 sm:first:pl-0 sm:last:border-r-0">
+              <span className="font-mono text-sm text-primary">{s.n}</span>
+              <h2 className="display mt-3 text-4xl">{s.t}</h2>
+              <p className="mt-3 text-muted">{s.d}</p>
+            </li>
           ))}
-        </div>
-        <p className="mt-10 inline-flex items-center gap-2 text-sm text-faint"><CheckCircle2 className="size-4" /> Funciona con TV, proyector o pantalla LED</p>
+        </ol>
       </section>
     </main>
   );

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import type { FormState } from "@/app/actions/auth";
-import { Button } from "@/components/ui/button";
+import { Arrow, Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 
 export function AuthForm({ mode, action }: {
@@ -15,17 +15,15 @@ export function AuthForm({ mode, action }: {
   const isLogin = mode === "login";
 
   return (
-    <form action={formAction} className="space-y-5" noValidate>
-      <div className="space-y-1.5">
-        <h1 className="text-2xl font-bold">{isLogin ? "Bienvenido de nuevo" : "Creá tu cuenta"}</h1>
-        <p className="text-sm text-muted">
-          {isLogin ? "Ingresá para administrar tus eventos." : "Empezá a recibir las fotos de tus invitados en minutos."}
+    <form action={formAction} className="space-y-6" noValidate>
+      <div>
+        <h1 className="display text-5xl">{isLogin ? <>Hola <em>de nuevo</em></> : <>Creá tu <em>cuenta</em></>}</h1>
+        <p className="mt-3 text-muted">
+          {isLogin ? "Ingresá para administrar tus eventos." : "En dos minutos tenés tu primer evento listo."}
         </p>
       </div>
       {state?.error && (
-        <p role="alert" className="rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-sm text-danger">
-          {state.error}
-        </p>
+        <p role="alert" className="rounded-[10px] border border-danger/40 px-4 py-3 text-sm text-danger">{state.error}</p>
       )}
       {!isLogin && (
         <Field label="Nombre" error={err("name")}>
@@ -39,11 +37,11 @@ export function AuthForm({ mode, action }: {
         <Input name="password" type="password" autoComplete={isLogin ? "current-password" : "new-password"} placeholder="••••••••" />
       </Field>
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
-        {pending ? "Un momento…" : isLogin ? "Ingresar" : "Crear cuenta"}
+        {pending ? "Un momento…" : isLogin ? "Ingresar" : "Crear cuenta"} {!pending && <Arrow />}
       </Button>
-      <p className="text-center text-sm text-muted">
+      <p className="text-sm text-muted">
         {isLogin ? "¿No tenés cuenta? " : "¿Ya tenés cuenta? "}
-        <Link href={isLogin ? "/registro" : "/login"} className="font-semibold text-violet-300 hover:text-violet-200">
+        <Link href={isLogin ? "/registro" : "/login"} className="font-semibold text-ink underline decoration-primary decoration-2 underline-offset-4 hover:text-primary">
           {isLogin ? "Registrate" : "Ingresá"}
         </Link>
       </p>

@@ -102,7 +102,7 @@ model Event {
   date         DateTime
   venue        String?
   coverKey     String?
-  brandColor   String      @default("#8B5CF6")
+  brandColor   String      @default("#FF5B2E")
   status       EventStatus @default(active)
   storageUntil DateTime
   createdAt    DateTime    @default(now())

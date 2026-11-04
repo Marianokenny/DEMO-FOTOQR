@@ -1,4 +1,3 @@
-import { CalendarClock, CheckCircle2, Clock, ImageIcon, Play, Settings2, Sparkles, Video } from "lucide-react";
 import type { ProjectionSettings } from "@prisma/client";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
@@ -15,69 +14,56 @@ export function ProjectionCard({ eventName, settings, stats, screenHref, configu
 }) {
   const expired = settings.expiresAt ? settings.expiresAt.getTime() < Date.now() : false;
   const on = settings.enabled && !expired;
+  const soon = "pointer-events-none opacity-40";
+
   return (
-    <section className="card-hero relative overflow-hidden rounded-3xl border border-line-strong p-6 sm:p-8">
-      <div className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full bg-fuchsia-500/20 blur-3xl" />
-      <div className="relative flex flex-wrap items-start justify-between gap-4">
+    <section className="rounded-[14px] bg-paper text-on-paper">
+      <div className="flex flex-wrap items-start justify-between gap-4 p-6 sm:p-8">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">Proyección en vivo</p>
-          <h2 className="mt-2 text-2xl font-bold sm:text-3xl">{eventName}</h2>
+          <p className="eyebrow text-on-paper-muted">Proyección en vivo</p>
+          <h2 className="display mt-3 text-5xl sm:text-6xl">{eventName}</h2>
         </div>
         {on ? (
-          <Badge tone="success" dot className="text-sm">Encendida</Badge>
+          <Badge tone="success" dot pulse className="text-emerald-700">Encendida</Badge>
         ) : (
-          <Badge tone={expired ? "danger" : "neutral"} dot className="text-sm">{expired ? "Vencida" : "Apagada"}</Badge>
+          <Badge tone={expired ? "danger" : "neutral"} dot className={expired ? "text-red-700" : "text-on-paper-muted"}>{expired ? "Vencida" : "Apagada"}</Badge>
         )}
       </div>
 
-      <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat icon={<ImageIcon className="size-4" />} label="Recibidos" value={stats.received} detail={`${stats.photos} fotos · ${stats.videos} videos`} />
-        <Stat icon={<CheckCircle2 className="size-4" />} label="Aprobados" value={stats.approved} />
-        <Stat icon={<Clock className="size-4" />} label="Pendientes" value={stats.pending} highlight={stats.pending > 0} />
-        <Stat icon={<Video className="size-4" />} label="Videos" value={stats.videos} />
-      </div>
+      <dl className="grid grid-cols-2 border-y border-on-paper/15 sm:grid-cols-4">
+        <Stat label="Recibidos" value={stats.received} />
+        <Stat label="Aprobados" value={stats.approved} />
+        <Stat label="Pendientes" value={stats.pending} accent={stats.pending > 0} />
+        <Stat label="Fotos / videos" value={`${stats.photos}/${stats.videos}`} />
+      </dl>
 
-      <div className="relative mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted">
-        <span className="inline-flex items-center gap-2">
-          <CalendarClock className="size-4 text-violet-300" />
-          {settings.expiresAt ? <>Vence el {formatDateTime(settings.expiresAt)}</> : "Sin vencimiento"}
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <Sparkles className="size-4 text-violet-300" />
-          Aprobación automática: <strong className={settings.autoApprove ? "text-success" : "text-ink"}>{settings.autoApprove ? "activada" : "desactivada"}</strong>
-        </span>
-      </div>
-
-      <div className="relative mt-6 flex flex-wrap gap-3">
-        {screenHref ? (
-          <a href={screenHref} target="_blank" rel="noreferrer" className={buttonClass("primary", "lg")}>
-            <Play className="size-4" /> Entrar a la proyección
-          </a>
-        ) : (
-          <span className={buttonClass("primary", "lg", "pointer-events-none opacity-50")} title="Disponible en la etapa 4">
-            <Play className="size-4" /> Entrar a la proyección
-          </span>
-        )}
-        {configureHref ? (
-          <a href={configureHref} className={buttonClass("secondary", "lg")}><Settings2 className="size-4" /> Configurar</a>
-        ) : (
-          <span className={buttonClass("secondary", "lg", "pointer-events-none opacity-50")} title="Disponible en la etapa 4">
-            <Settings2 className="size-4" /> Configurar
-          </span>
-        )}
+      <div className="flex flex-wrap items-center justify-between gap-6 p-6 sm:p-8">
+        <ul className="space-y-1 font-mono text-[13px] text-on-paper-muted">
+          <li>Vence · <span className="text-on-paper">{settings.expiresAt ? formatDateTime(settings.expiresAt) : "sin vencimiento"}</span></li>
+          <li>Aprobación automática · <span className="text-on-paper">{settings.autoApprove ? "sí" : "no"}</span></li>
+        </ul>
+        <div className="flex flex-wrap gap-2">
+          {configureHref ? (
+            <a href={configureHref} className={buttonClass("secondary", "md", "border-on-paper/25 text-on-paper hover:bg-on-paper hover:text-paper")}>Configurar</a>
+          ) : (
+            <span className={buttonClass("secondary", "md", `border-on-paper/25 text-on-paper ${soon}`)} title="Disponible en la etapa 4">Configurar</span>
+          )}
+          {screenHref ? (
+            <a href={screenHref} target="_blank" rel="noreferrer" className={buttonClass("dark", "md")}>Entrar a la proyección ↗</a>
+          ) : (
+            <span className={buttonClass("dark", "md", soon)} title="Disponible en la etapa 4">Entrar a la proyección ↗</span>
+          )}
+        </div>
       </div>
     </section>
   );
 }
 
-function Stat({ icon, label, value, detail, highlight }: {
-  icon: React.ReactNode; label: string; value: number; detail?: string; highlight?: boolean;
-}) {
+function Stat({ label, value, accent }: { label: string; value: number | string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl border p-4 ${highlight ? "border-warning/40 bg-warning/10" : "border-white/10 bg-white/5"}`}>
-      <p className="flex items-center gap-1.5 text-xs font-medium text-muted">{icon}{label}</p>
-      <p className="mt-1.5 text-3xl font-bold tabular-nums">{value}</p>
-      {detail && <p className="mt-0.5 text-xs text-faint">{detail}</p>}
+    <div className="border-on-paper/15 p-6 even:border-l sm:border-l sm:first:border-l-0 sm:p-8 [&:nth-child(n+3)]:border-t sm:[&:nth-child(n+3)]:border-t-0">
+      <dt className="eyebrow text-on-paper-muted">{label}</dt>
+      <dd className={`display mt-2 text-6xl tabular-nums ${accent ? "text-primary" : ""}`}>{value}</dd>
     </div>
   );
 }
