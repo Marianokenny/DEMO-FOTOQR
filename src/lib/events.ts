@@ -33,8 +33,9 @@ export async function createEvent(owner: Pick<User, "id">, input: EventInput) {
         create: LINK_TYPES.map((type) => ({
           type,
           token: randomToken(),
-          // Upload and screen links expire with the projection window; the gallery with storage.
-          expiresAt: type === "gallery" ? storageUntil : new Date(input.date.getTime() + 24 * 60 * 60 * 1000),
+          // Guests can upload until a day after the start; the gallery lives as long as storage.
+          // The screen link never expires by itself: the projection has its own on/off and expiry.
+          expiresAt: type === "gallery" ? storageUntil : type === "upload" ? new Date(input.date.getTime() + 24 * 60 * 60 * 1000) : null,
         })),
       },
     },

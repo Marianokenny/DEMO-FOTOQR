@@ -5,6 +5,8 @@ import { DeleteEventButton } from "@/components/panel/delete-event-button";
 import { EventForm } from "@/components/panel/event-form";
 import { GuestLinkPanel } from "@/components/panel/guest-link-panel";
 import { ModerationBoard } from "@/components/panel/moderation-board";
+import { ProjectionPanel } from "@/components/panel/projection-panel";
+import { linkUrl } from "@/lib/links";
 import { ProjectionCard } from "@/components/panel/projection-card";
 import { Card, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
@@ -16,7 +18,7 @@ import { EVENT_TYPE_LABELS } from "@/lib/validation";
 
 const TABS = [
   { id: "resumen", label: "Resumen" },
-  { id: "proyeccion", label: "Proyección", stage: 4 },
+  { id: "proyeccion", label: "Proyección" },
   { id: "invitados", label: "Link para invitados" },
   { id: "moderacion", label: "Moderación" },
   { id: "galeria", label: "Galería", stage: 6 },
@@ -45,6 +47,7 @@ export default async function EventPage({ params, searchParams }: {
   const stats = await getEventStats(id);
   const tab: TabId = TABS.some((t) => t.id === rawTab) ? (rawTab as TabId) : "resumen";
   const active = TABS.find((t) => t.id === tab)!;
+  const screenLink = event.links.find((l) => l.type === "screen");
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -91,7 +94,7 @@ export default async function EventPage({ params, searchParams }: {
       {tab === "resumen" && (
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <ProjectionCard eventName={event.name} settings={event.projectionSettings!} stats={stats} />
+            <ProjectionCard eventName={event.name} settings={event.projectionSettings!} stats={stats} screenHref={screenLink ? linkUrl("screen", screenLink.token) : undefined} configureHref="?tab=proyeccion" />
           </div>
           <Card>
             <CardTitle>Datos del evento</CardTitle>
@@ -106,6 +109,10 @@ export default async function EventPage({ params, searchParams }: {
             </dl>
           </Card>
         </div>
+      )}
+
+      {tab === "proyeccion" && (
+        <ProjectionPanel eventId={event.id} settings={event.projectionSettings!} screenLink={screenLink} canConfigure={canConfigure} />
       )}
 
       {tab === "moderacion" && (
