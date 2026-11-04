@@ -4,6 +4,7 @@ import { deleteEventAction, updateEventAction } from "@/app/actions/events";
 import { DeleteEventButton } from "@/components/panel/delete-event-button";
 import { EventForm } from "@/components/panel/event-form";
 import { GuestLinkPanel } from "@/components/panel/guest-link-panel";
+import { ModerationBoard } from "@/components/panel/moderation-board";
 import { ProjectionCard } from "@/components/panel/projection-card";
 import { Card, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
@@ -17,7 +18,7 @@ const TABS = [
   { id: "resumen", label: "Resumen" },
   { id: "proyeccion", label: "Proyección", stage: 4 },
   { id: "invitados", label: "Link para invitados" },
-  { id: "moderacion", label: "Moderación", stage: 3 },
+  { id: "moderacion", label: "Moderación" },
   { id: "galeria", label: "Galería", stage: 6 },
   { id: "configuracion", label: "Configuración" },
 ] as const;
@@ -46,7 +47,7 @@ export default async function EventPage({ params, searchParams }: {
   const active = TABS.find((t) => t.id === tab)!;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <Link href="/panel" className="eyebrow inline-block text-muted hover:text-primary">← Mis eventos</Link>
 
       <header className="flex flex-wrap items-end justify-between gap-6">
@@ -55,7 +56,7 @@ export default async function EventPage({ params, searchParams }: {
             <span className="size-2 rounded-full" style={{ background: event.brandColor }} />
             {EVENT_TYPE_LABELS[event.type]} · {role === "owner" ? "Dueño" : "Moderador"}
           </p>
-          <h1 className="display mt-3 text-6xl sm:text-7xl">{event.name}</h1>
+          <h1 className="display mt-3 text-5xl sm:text-7xl">{event.name}</h1>
           <p className="mt-3 text-muted">
             {formatDate(event.date, { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
             {event.venue && <> · {event.venue}</>}
@@ -105,6 +106,10 @@ export default async function EventPage({ params, searchParams }: {
             </dl>
           </Card>
         </div>
+      )}
+
+      {tab === "moderacion" && (
+        <ModerationBoard eventId={event.id} initialAutoApprove={event.projectionSettings!.autoApprove} canConfigure={canConfigure} />
       )}
 
       {tab === "invitados" && (

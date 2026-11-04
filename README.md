@@ -31,4 +31,4 @@ npm test
 
 ## Estado
 
-Etapas 1 y 2 de 7: base, login, eventos y permisos; link y QR para invitados, página de carga para celulares y procesamiento de fotos y videos.
+Etapas 1 a 3 de 7: base, login, eventos y permisos; link y QR para invitados, carga desde celulares y procesamiento; moderación en vivo.
