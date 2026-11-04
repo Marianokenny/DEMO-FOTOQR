@@ -1,5 +1,8 @@
 "use server";
 
+import { clientInfo } from "@/lib/guest-cookie";
+import { consume } from "@/lib/rate-limit";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { clearSessionCookie, setSessionCookie } from "@/lib/auth";
@@ -18,6 +21,10 @@ export async function registerAction(_: FormState, formData: FormData): Promise<
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors, values: values(formData, ["name", "email"]) };
   }
+  const { ip } = await clientInfo();
+  if (!(await consume(`register:ip:${ip}`, 1, 10, 60 * 60))) {
+    return { error: "Demasiadas cuentas creadas desde esta conexión. Probá más tarde.", values: values(formData, ["name", "email"]) };
+  }
   try {
     const user = await registerUser(parsed.data);
     const { token, expiresAt } = await createSession(user.id);
@@ -34,6 +41,11 @@ export async function loginAction(_: FormState, formData: FormData): Promise<For
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors, values: values(formData, ["email"]) };
   }
+  // Brute-force protection: per IP and per account.
+  const { ip } = await clientInfo();
+  const email = parsed.data.email.toLowerCase();
+  const allowed = (await consume(`login:ip:${ip}`, 1, 30, 15 * 60)) && (await consume(`login:email:${email}`, 1, 10, 15 * 60));
+  if (!allowed) return { error: "Demasiados intentos. Esperá unos minutos y probá de nuevo.", values: values(formData, ["email"]) };
   const user = await authenticate(parsed.data.email, parsed.data.password);
   if (!user) return { error: "Email o contraseña incorrectos.", values: values(formData, ["email"]) };
   const { token, expiresAt } = await createSession(user.id);

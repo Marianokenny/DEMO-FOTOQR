@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { apiError } from "@/lib/api";
+import { apiError, readJson } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { approveAllPending, moderate } from "@/lib/moderation";
 
@@ -16,7 +16,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     const { id } = await params;
-    const parsed = schema.safeParse(await req.json().catch(() => null));
+    const parsed = schema.safeParse(await readJson(req, 256 * 1024));
     if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
     const body = parsed.data;
     return NextResponse.json(body.action === "approveAllPending" ? await approveAllPending(user, id) : await moderate(user, id, body.ids, body.action));

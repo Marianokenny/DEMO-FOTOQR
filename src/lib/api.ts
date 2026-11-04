@@ -11,3 +11,16 @@ export function apiError(e: unknown) {
   console.error(e);
   return NextResponse.json({ error: "internal", message: "Algo salió mal. Probá de nuevo." }, { status: 500 });
 }
+
+/** Reads a JSON body of at most `maxBytes`. Returns null when it is missing, too large or invalid. */
+export async function readJson(req: Request, maxBytes = 64 * 1024): Promise<unknown> {
+  const declared = Number(req.headers.get("content-length") ?? 0);
+  if (declared > maxBytes) return null;
+  const text = await req.text().catch(() => "");
+  if (!text || Buffer.byteLength(text) > maxBytes) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}

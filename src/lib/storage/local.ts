@@ -59,7 +59,7 @@ export class LocalStorage implements StorageDriver {
     return this.readStream(key);
   }
 
-  readStream(key: string) {
-    return createReadStream(this.pathFor(key));
+  readStream(key: string, range?: { start: number; end: number }) {
+    return createReadStream(this.pathFor(key), range);
   }
 }

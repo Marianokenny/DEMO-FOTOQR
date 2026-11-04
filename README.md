@@ -29,6 +29,21 @@ Las pruebas usan una base aparte (`fotosqr_test` por defecto, o `TEST_DATABASE_U
 npm test
 ```
 
+## Publicar la demo gratis
+
+Ver [docs/DEMO.md](docs/DEMO.md): Docker Compose en tu compu más un túnel de Cloudflare, sin costo.
+
+## Prueba de carga
+
+```
+npm run load-test -- --guests 200 --photos 3
+```
+
+Resultado de referencia (4 núcleos, almacenamiento local): 200 invitados subiendo 3 fotos de ~3,8 MB a la vez
+desde la misma IP: 600 fotos (2,3 GB) subidas en ~21 s, sin errores, y todas procesadas y en pantalla en ~2 min 45 s.
+
 ## Estado
 
-Etapas 1 a 6 de 7: base, login, eventos y permisos; link y QR para invitados, carga desde celulares y procesamiento; moderación en vivo; pantalla de proyección en tiempo real.
+Las 7 etapas del plan están hechas: base, login, eventos y permisos; link y QR para invitados, carga desde celulares
+y procesamiento; moderación en vivo; pantalla de proyección en tiempo real; editor de apariencia; galería con
+descarga y vencimiento; seguridad, prueba de carga y publicación con Docker.

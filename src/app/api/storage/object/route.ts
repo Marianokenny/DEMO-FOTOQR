@@ -44,9 +44,11 @@ export async function PUT(req: Request) {
       const out = createWriteStream(file);
       limited.on("error", reject).pipe(out).on("finish", resolve).on("error", reject);
     });
-  } catch {
+  } catch (e) {
     await rm(file, { force: true });
-    return new Response("Archivo demasiado grande", { status: 413 });
+    if (written > max) return new Response("Archivo demasiado grande", { status: 413 });
+    console.error("[storage] no se pudo guardar", parts.key, (e as Error).message);
+    return new Response("No se pudo guardar el archivo", { status: 500 });
   }
   return new Response(null, { status: 200 });
 }
@@ -60,8 +62,28 @@ export async function GET(req: Request) {
   if (size === null) return new Response("No encontrado", { status: 404 });
   const ext = path.extname(parts.key).slice(1);
   const type = { webp: "image/webp", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", mp4: "video/mp4" }[ext] ?? "application/octet-stream";
-  const headers: Record<string, string> = { "Content-Type": type, "Content-Length": String(size), "Cache-Control": "private, max-age=3600" };
+  const headers: Record<string, string> = {
+    "Content-Type": type, "Cache-Control": "private, max-age=3600", "Accept-Ranges": "bytes",
+    // Guest files are never rendered as a document of this site.
+    "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "sandbox; default-src 'none'",
+  };
   if (parts.dn) headers["Content-Disposition"] = `attachment; filename="${parts.dn}"`;
+  // Byte ranges: iPhone Safari only plays video when the server answers them, and they allow seeking.
+  const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.get("range") ?? "");
+  if (range && size > 0 && (range[1] || range[2])) {
+    let start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+    let end = range[1] && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+    if (!range[1]) end = size - 1;
+    if (start >= size || start > end) {
+      return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+    }
+    start = Math.max(0, start);
+    headers["Content-Range"] = `bytes ${start}-${end}/${size}`;
+    headers["Content-Length"] = String(end - start + 1);
+    const stream = Readable.toWeb(driver.readStream(parts.key, { start, end })) as ReadableStream;
+    return new Response(stream, { status: 206, headers });
+  }
+  headers["Content-Length"] = String(size);
   const stream = Readable.toWeb(driver.readStream(parts.key)) as ReadableStream;
   return new Response(stream, { headers });
 }

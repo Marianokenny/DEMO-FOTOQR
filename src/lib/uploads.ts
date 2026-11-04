@@ -42,7 +42,7 @@ async function findOrCreateGuest(eventId: string, guestToken: string | undefined
       return { guest: { ...existing, name: name ?? existing.name }, token: guestToken, isNew: false };
     }
   }
-  if (!(await consume(`guest-new:${eventId}:${sha256(ip)}`, 1, 300, 600))) {
+  if (!(await consume(`guest-new:${eventId}:${sha256(ip)}`, 1, 1000, 600))) {
     throw new UploadError("rate_limited", "Demasiados intentos desde esta red. Esperá unos minutos.", 429);
   }
   const token = randomToken(24);
@@ -82,7 +82,7 @@ export async function createUploads(opts: {
     throw new UploadError("guest_limit", left ? `Podés subir ${left} archivo${left === 1 ? "" : "s"} más.` : "Llegaste al máximo de archivos para este evento.");
   }
   // Generous per-network limit: everyone at the venue may share one Wi-Fi IP.
-  if (!(await consume(`files:${event.id}:${sha256(opts.ip)}`, files.length, 2000, 600))) {
+  if (!(await consume(`files:${event.id}:${sha256(opts.ip)}`, files.length, 6000, 600))) {
     throw new UploadError("rate_limited", "Hay demasiadas subidas desde esta red. Probá de nuevo en unos minutos.", 429);
   }
 

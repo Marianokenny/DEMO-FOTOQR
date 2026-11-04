@@ -20,7 +20,7 @@ export async function addAsset(user: Actor, eventId: string, usage: AssetUsage, 
   if (bytes.length > MAX_BYTES) throw new AssetError("La imagen pesa más de 15 MB.");
   const type = await fileTypeFromBuffer(bytes);
   if (!type || !["image/jpeg", "image/png", "image/webp"].includes(type.mime)) throw new AssetError("Subí una imagen JPG, PNG o WEBP.");
-  let out: { data: Buffer; info: sharp.OutputInfo };
+  let out: { data: Buffer; info: import("sharp").OutputInfo };
   try {
     out = await sharp(bytes, { limitInputPixels: 120_000_000 }).rotate()
       .resize(MAX_SIDE, MAX_SIDE, { fit: "inside", withoutEnlargement: true })

@@ -1,0 +1,68 @@
+# Demo gratis en tu compu: base de datos, Redis, la app, el procesador de fotos/videos
+# y un túnel de Cloudflare que da una dirección https pública (sin cuenta ni dominio).
+#
+#   docker compose up -d --build
+#   docker compose logs app | grep "FOTOSQR listo"
+#
+# La dirección del túnel cambia cada vez que se reinicia el contenedor "tunnel".
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fotosqr
+      POSTGRES_PASSWORD: fotosqr
+      POSTGRES_DB: fotosqr
+    volumes: [db:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fotosqr"]
+      interval: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis:/data]
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: ["tunnel", "--no-autoupdate", "--metrics", "0.0.0.0:2000", "--url", "http://app:3000"]
+    restart: unless-stopped
+
+  app:
+    build: .
+    image: fotosqr:local
+    command: ["web"]
+    environment: &env
+      DATABASE_URL: postgresql://fotosqr:fotosqr@db:5432/fotosqr?schema=public
+      REDIS_URL: redis://redis:6379
+      TUNNEL_METRICS_URL: http://tunnel:2000
+      # Para usar tu propio dominio, poné acá APP_URL: https://tu-dominio.com
+      APP_URL: ${APP_URL:-}
+      APP_SECRET: ${APP_SECRET:-}
+    volumes: [data:/data]
+    ports: ["3000:3000"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+      tunnel: { condition: service_started }
+    restart: unless-stopped
+
+  worker:
+    image: fotosqr:local
+    command: ["worker"]
+    environment:
+      <<: *env
+      WORKER_CONCURRENCY: 2
+    volumes: [data:/data]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+      app: { condition: service_started }
+    restart: unless-stopped
+
+volumes:
+  db:
+  redis:
+  data:

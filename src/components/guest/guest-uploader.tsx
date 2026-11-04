@@ -23,10 +23,37 @@ function putWithProgress(url: string, headers: Record<string, string>, file: Fil
     xhr.open("PUT", url);
     Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v));
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(xhr.status === 413 ? "Archivo demasiado grande." : "No se pudo subir.")));
-    xhr.onerror = () => reject(new Error("Se cortó la conexión."));
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300
+      ? resolve()
+      : reject(Object.assign(new Error(xhr.status === 413 ? "Archivo demasiado grande." : "No se pudo subir."), { retry: xhr.status >= 500 })));
+    xhr.onerror = () => reject(Object.assign(new Error("Se cortó la conexión."), { retry: true }));
     xhr.send(file);
   });
+}
+
+/** fetch that retries network failures (not HTTP errors) a few times. Resolves to null if it never connects. */
+async function fetchRetry(url: string, init: RequestInit): Promise<Response | null> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch {
+      await new Promise((r) => setTimeout(r, 700 * attempt));
+    }
+  }
+  return null;
+}
+
+/** Venue Wi-Fi drops connections now and then: retry network errors a few times before showing an error. */
+async function putWithRetry(url: string, headers: Record<string, string>, file: File, onProgress: (p: number) => void) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await putWithProgress(url, headers, file, onProgress);
+    } catch (e) {
+      if (!(e as { retry?: boolean }).retry || attempt >= 4) throw e;
+      onProgress(0);
+      await new Promise((r) => setTimeout(r, 800 * attempt));
+    }
+  }
 }
 
 async function runPool<T>(items: T[], size: number, fn: (item: T) => Promise<void>) {
@@ -101,11 +128,11 @@ export function GuestUploader({ token, event, limits }: { token: string; event: 
     const targets = new Map<string, { mediaId: string; url: string; headers: Record<string, string> }>();
     for (let i = 0; i < prepared.length; i += 20) {
       const batch = prepared.slice(i, i + 20);
-      const res = await fetch(`/api/u/${token}/uploads`, {
+      const res = await fetchRetry(`/api/u/${token}/uploads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim() || undefined, files: batch.map(({ file }) => ({ name: file.name, size: file.size, type: file.type })) }),
-      }).catch(() => null);
+      });
       const body = res ? await res.json().catch(() => ({})) : {};
       if (!res?.ok) {
         const msg = body.message ?? "No pudimos conectar. Revisá tu conexión.";
@@ -122,8 +149,9 @@ export function GuestUploader({ token, event, limits }: { token: string; event: 
       const t = targets.get(item.id)!;
       update(item.id, { status: "uploading" });
       try {
-        await putWithProgress(t.url, t.headers, file, (p) => update(item.id, { progress: p }));
-        const res = await fetch(`/api/u/${token}/uploads/${t.mediaId}/complete`, { method: "POST" });
+        await putWithRetry(t.url, t.headers, file, (p) => update(item.id, { progress: p }));
+        const res = await fetchRetry(`/api/u/${token}/uploads/${t.mediaId}/complete`, { method: "POST" }); // safe to repeat
+        if (!res) throw new Error("Se cortó la conexión.");
         if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message ?? "No se pudo confirmar.");
         update(item.id, { status: "done", progress: 1 });
         ok += 1;

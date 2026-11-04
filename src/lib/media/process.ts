@@ -46,9 +46,16 @@ export async function processPhoto(input: string, detectedMime: string, outDir: 
   const full = path.join(outDir, "full.jpg");
   const display = path.join(outDir, "display.webp");
   const thumb = path.join(outDir, "thumb.webp");
-  await base.clone().resize(FULL_MAX, FULL_MAX, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 90, mozjpeg: true }).toFile(full);
-  await base.clone().resize(DISPLAY_MAX, DISPLAY_MAX, { fit: "inside", withoutEnlargement: true }).webp({ quality: 84 }).toFile(display);
-  await base.clone().resize(THUMB_MAX, THUMB_MAX, { fit: "inside", withoutEnlargement: true }).webp({ quality: 74 }).toFile(thumb);
+  // Decode and rotate once, then encode the three sizes in parallel from that pixel buffer.
+  // Re-encoding drops all metadata (GPS, camera serials) by default.
+  const { data, info } = await base.resize(FULL_MAX, FULL_MAX, { fit: "inside", withoutEnlargement: true })
+    .removeAlpha().toColourspace("srgb").raw().toBuffer({ resolveWithObject: true });
+  const pixels = () => sharp(data, { raw: { width: info.width, height: info.height, channels: info.channels } });
+  await Promise.all([
+    pixels().jpeg({ quality: 88 }).toFile(full),
+    pixels().resize(DISPLAY_MAX, DISPLAY_MAX, { fit: "inside", withoutEnlargement: true }).webp({ quality: 82, effort: 2 }).toFile(display),
+    pixels().resize(THUMB_MAX, THUMB_MAX, { fit: "inside", withoutEnlargement: true }).webp({ quality: 72, effort: 2 }).toFile(thumb),
+  ]);
   return { width, height, full, display, thumb };
 }
 
