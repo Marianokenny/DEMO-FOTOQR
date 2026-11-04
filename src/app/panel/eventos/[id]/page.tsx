@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { deleteEventAction, updateEventAction } from "@/app/actions/events";
 import { DeleteEventButton } from "@/components/panel/delete-event-button";
 import { EventForm } from "@/components/panel/event-form";
+import { GuestLinkPanel } from "@/components/panel/guest-link-panel";
 import { ProjectionCard } from "@/components/panel/projection-card";
 import { Card, CardTitle } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
@@ -15,7 +16,7 @@ import { EVENT_TYPE_LABELS } from "@/lib/validation";
 const TABS = [
   { id: "resumen", label: "Resumen" },
   { id: "proyeccion", label: "Proyección", stage: 4 },
-  { id: "invitados", label: "Link para invitados", stage: 2 },
+  { id: "invitados", label: "Link para invitados" },
   { id: "moderacion", label: "Moderación", stage: 3 },
   { id: "galeria", label: "Galería", stage: 6 },
   { id: "configuracion", label: "Configuración" },
@@ -104,6 +105,15 @@ export default async function EventPage({ params, searchParams }: {
             </dl>
           </Card>
         </div>
+      )}
+
+      {tab === "invitados" && (
+        <GuestLinkPanel
+          eventId={event.id}
+          link={event.links.find((l) => l.type === "upload")}
+          settings={event.uploadSettings!}
+          canConfigure={canConfigure}
+        />
       )}
 
       {tab === "configuracion" && canConfigure && (

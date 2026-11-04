@@ -1,5 +1,7 @@
 import { execSync } from "node:child_process";
+import { rmSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
+import IORedis from "ioredis";
 
 const url =
   process.env.TEST_DATABASE_URL ??
@@ -18,4 +20,8 @@ export default async function setup() {
     );
   }
   await prisma.$disconnect();
+  const redis = new IORedis("redis://localhost:6379/1");
+  await redis.flushdb();
+  await redis.quit();
+  rmSync("/tmp/fotosqr-test-storage", { recursive: true, force: true });
 }

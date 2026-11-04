@@ -38,3 +38,13 @@ export const eventInputSchema = z.object({
 });
 
 export type EventInput = z.infer<typeof eventInputSchema>;
+
+export const uploadSettingsSchema = z.object({
+  allowVideos: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),
+  maxPhotoMb: z.coerce.number().int().min(1, "Mínimo 1 MB.").max(50, "Máximo 50 MB."),
+  maxVideoMb: z.coerce.number().int().min(5, "Mínimo 5 MB.").max(1024, "Máximo 1024 MB."),
+  maxVideoSeconds: z.coerce.number().int().min(5, "Mínimo 5 segundos.").max(300, "Máximo 300 segundos."),
+  maxFilesPerGuest: z.coerce.number().int().min(1, "Mínimo 1.").max(500, "Máximo 500."),
+});
+
+export type UploadSettingsInput = z.infer<typeof uploadSettingsSchema>;

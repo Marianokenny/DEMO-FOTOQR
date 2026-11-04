@@ -2,7 +2,7 @@ import type { LinkType, User } from "@prisma/client";
 import { db } from "./db";
 import { assertCan } from "./permissions";
 import { randomToken } from "./tokens";
-import type { EventInput } from "./validation";
+import type { EventInput, UploadSettingsInput } from "./validation";
 
 const DAY = 24 * 60 * 60 * 1000;
 const LINK_TYPES: LinkType[] = ["upload", "screen", "gallery"];
@@ -97,4 +97,9 @@ export async function getEventStats(eventId: string) {
     pending: sum((g) => g.status === "pending" || g.status === "processing"),
     rejected: sum((g) => g.status === "rejected"),
   };
+}
+
+export async function updateUploadSettings(user: Pick<User, "id" | "role">, eventId: string, input: UploadSettingsInput) {
+  await assertCan(user, eventId, "configure");
+  return db.uploadSettings.update({ where: { eventId }, data: input });
 }

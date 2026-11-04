@@ -6,6 +6,8 @@ Plataforma para que los invitados de un evento suban fotos y videos desde el cel
 
 - Node 22
 - PostgreSQL 16
+- Redis 7 (cola de procesamiento y avisos en vivo)
+- ffmpeg y ffprobe (conversión de videos)
 
 ## Puesta en marcha
 
@@ -14,7 +16,10 @@ cp .env.example .env        # completar DATABASE_URL
 npm install
 npx prisma migrate deploy
 npm run dev                 # http://localhost:3000
+npm run worker              # en otra terminal: procesa fotos y videos
 ```
+
+Por defecto los archivos se guardan en disco (`STORAGE_DRIVER=local`). Para Cloudflare R2 u otro almacenamiento S3, poné `STORAGE_DRIVER=s3` y completá las variables `S3_*`.
 
 ## Pruebas
 
@@ -26,4 +31,4 @@ npm test
 
 ## Estado
 
-Etapa 1 de 7: base del proyecto, login de organizadores, eventos y permisos.
+Etapas 1 y 2 de 7: base, login, eventos y permisos; link y QR para invitados, página de carga para celulares y procesamiento de fotos y videos.
