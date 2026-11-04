@@ -31,3 +31,9 @@ export async function saveProjectionSettingsAction(eventId: string, _: FormState
   revalidatePath(`/panel/eventos/${eventId}`);
   return { values: { saved: String(Date.now()) } };
 }
+
+export async function setShowSenderNameAction(eventId: string, showSenderName: boolean) {
+  const user = await requireUser();
+  await updateProjectionSettings(user, eventId, { showSenderName });
+  revalidatePath(`/panel/eventos/${eventId}`);
+}

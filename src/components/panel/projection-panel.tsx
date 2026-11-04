@@ -1,7 +1,8 @@
 import type { AccessLink, ProjectionSettings } from "@prisma/client";
 import { regenerateLinkAction } from "@/app/actions/links";
 import { saveProjectionSettingsAction } from "@/app/actions/projection";
-import { buttonClass } from "@/components/ui/button";
+import Link from "next/link";
+import { Arrow, buttonClass } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { toLocalInputValue } from "@/lib/dates";
 import { linkUrl } from "@/lib/links";
@@ -19,6 +20,15 @@ export function ProjectionPanel({ eventId, settings, screenLink, canConfigure }:
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
       <div className="space-y-6">
         {canConfigure && <ProjectionToggle eventId={eventId} enabled={settings.enabled} expired={expired} />}
+        {canConfigure && (
+          <Card className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <CardTitle>Apariencia</CardTitle>
+              <p className="mt-1 text-sm text-muted">Fondo, capas, texto de espera, tipografías y nombre del remitente.</p>
+            </div>
+            <Link href={`/panel/eventos/${eventId}/apariencia`} className={buttonClass("primary", "md")}>Editar apariencia <Arrow /></Link>
+          </Card>
+        )}
         {canConfigure && (
           <Card>
             <CardTitle className="mb-6">Cómo se reproduce</CardTitle>

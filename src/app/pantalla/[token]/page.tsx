@@ -1,13 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Bebas_Neue, Great_Vibes, Montserrat, Playfair_Display } from "next/font/google";
 import { ProjectionPlayer } from "@/components/screen/projection-player";
 import { LinkError } from "@/lib/links";
 import { getScreenState } from "@/lib/projection";
+import { screenFontsClass } from "@/lib/screen-fonts";
 
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
-const greatVibes = Great_Vibes({ subsets: ["latin"], weight: "400", variable: "--font-greatvibes" });
-const bebas = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-bebas" });
-const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 
 export const metadata: Metadata = { title: "Proyección", robots: { index: false } };
 export const viewport: Viewport = { themeColor: "#000000" };
@@ -18,7 +14,7 @@ export default async function ScreenPage({ params }: { params: Promise<{ token: 
   try {
     const state = await getScreenState(token);
     return (
-      <div className={`${playfair.variable} ${greatVibes.variable} ${bebas.variable} ${montserrat.variable}`}>
+      <div className={screenFontsClass}>
         <style>{"body::before{display:none}"}</style>
         <ProjectionPlayer token={token} initial={state} />
       </div>

@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api";
+import { AssetError, saveAppearance } from "@/lib/assets";
+import { getCurrentUser } from "@/lib/auth";
+
+export const runtime = "nodejs";
+
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    const { id } = await params;
+    return NextResponse.json({ appearance: await saveAppearance(user, id, await req.json().catch(() => null)) });
+  } catch (e) {
+    if (e instanceof AssetError) return NextResponse.json({ error: "invalid", message: e.message }, { status: 400 });
+    return apiError(e);
+  }
+}

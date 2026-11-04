@@ -77,12 +77,12 @@ export function WaitingScreen({ appearance, event, uploadUrl, reason }: {
     QRCode.toString(uploadUrl, { type: "svg", margin: 1, color: { dark: "#15120e", light: "#ffffff" } }).then(setQr);
   }, [uploadUrl, w.showQr]);
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-[4vh] p-[5vw] text-center">
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-[4cqh] p-[5cqw] text-center">
       {w.enabled && (
         <p
-          className="max-w-[80vw] leading-[1.05]"
+          className="max-w-[80cqw] leading-[1.05]"
           style={{
-            fontFamily: FONT_VARS[w.font], fontSize: `calc(${w.size} / 1080 * 100vh)`, color: w.color,
+            fontFamily: FONT_VARS[w.font], fontSize: `calc(${w.size} / 1080 * 100cqh)`, color: w.color,
             background: w.background === "transparent" ? undefined : w.background,
             padding: w.background === "transparent" ? undefined : "0.15em 0.5em", borderRadius: "0.2em",
           }}
@@ -91,28 +91,28 @@ export function WaitingScreen({ appearance, event, uploadUrl, reason }: {
         </p>
       )}
       {qr && (
-        <div className="flex items-center gap-[2vw]">
-          <div className="w-[22vh] rounded-[1.5vh] bg-white p-[1vh] [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: qr }} />
+        <div className="flex items-center gap-[2cqw]">
+          <div className="w-[22cqh] rounded-[1.5cqh] bg-white p-[1cqh] [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: qr }} />
           <div className="text-left" style={{ color: w.color }}>
-            <p className="font-mono text-[1.6vh] uppercase tracking-[0.2em] opacity-70">Escaneá el QR</p>
-            <p className="mt-[0.6vh] text-[3.2vh]" style={{ fontFamily: FONT_VARS["Instrument Serif"] }}>{event.name}</p>
+            <p className="font-mono text-[1.6cqh] uppercase tracking-[0.2em] opacity-70">Escaneá el QR</p>
+            <p className="mt-[0.6cqh] text-[3.2cqh]" style={{ fontFamily: FONT_VARS["Instrument Serif"] }}>{event.name}</p>
           </div>
         </div>
       )}
-      {reason === "expired" && <p className="font-mono text-[1.4vh] uppercase tracking-[0.2em] opacity-50" style={{ color: w.color }}>La proyección terminó</p>}
+      {reason === "expired" && <p className="font-mono text-[1.4cqh] uppercase tracking-[0.2em] opacity-50" style={{ color: w.color }}>La proyección terminó</p>}
     </div>
   );
 }
 
-function SenderTag({ name, appearance }: { name: string; appearance: Appearance }) {
+export function SenderTag({ name, appearance }: { name: string; appearance: Appearance }) {
   const s = appearance.sender;
-  const pos = { "bottom-left": "left-[3vw]", "bottom-center": "left-1/2 -translate-x-1/2", "bottom-right": "right-[3vw]" }[s.position];
+  const pos = { "bottom-left": "left-[3cqw]", "bottom-center": "left-1/2 -translate-x-1/2", "bottom-right": "right-[3cqw]" }[s.position];
   return (
     <div
-      className={`absolute bottom-[4vh] ${pos} rounded-full px-[1.6vh] py-[0.8vh] text-[2.4vh] font-semibold shadow-lg`}
+      className={`absolute bottom-[4cqh] ${pos} rounded-full px-[1.6cqh] py-[0.8cqh] text-[2.4cqh] font-semibold shadow-lg`}
       style={{ color: s.color, background: s.background === "transparent" ? undefined : s.background }}
     >
-      <span className="mr-[0.8vh] opacity-60">📷</span>{name}
+      <span className="mr-[0.8cqh] opacity-60">📷</span>{name}
     </div>
   );
 }
@@ -353,18 +353,18 @@ export function ProjectionPlayer({ token, initial }: { token: string; initial: S
   const onEnded = useCallback(() => void advanceRef.current(), []);
 
   return (
-    <main className={`fixed inset-0 overflow-hidden bg-black select-none ${cursorHidden ? "cursor-none" : ""}`}>
+    <main className={`fixed inset-0 overflow-hidden bg-black [container-type:size] select-none ${cursorHidden ? "cursor-none" : ""}`}>
       <Backdrop appearance={state.appearance} assets={state.assets} />
       {slots.map((slot, i) => slot && (
         <MediaView key={slot.key} slot={slot} active={i === activeIdx && !!showing} appearance={state.appearance} settings={state.settings} audio={audio} onEnded={onEnded} />
       ))}
       {!showing && <WaitingScreen appearance={state.appearance} event={state.event} uploadUrl={state.uploadUrl} reason={state.reason} />}
       {hint && (
-        <div className="absolute left-1/2 top-[3vh] -translate-x-1/2 rounded-full bg-black/70 px-5 py-2.5 text-sm text-white">
+        <div className="absolute left-1/2 top-[3cqh] -translate-x-1/2 rounded-full bg-black/70 px-5 py-2.5 text-sm text-white">
           Hacé clic para activar el sonido y apretá <kbd className="rounded bg-white/20 px-1.5 font-mono">F</kbd> para pantalla completa
         </div>
       )}
-      {!online && <div className="absolute right-[1.5vh] top-[1.5vh] size-[1.2vh] rounded-full bg-amber-400/80" title="Reconectando" />}
+      {!online && <div className="absolute right-[1.5cqh] top-[1.5cqh] size-[1.2cqh] rounded-full bg-amber-400/80" title="Reconectando" />}
     </main>
   );
 }
