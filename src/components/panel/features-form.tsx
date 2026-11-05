@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
-import type { Features } from "@/lib/features";
+import { ROBOT_MOVE_LABELS, ROBOT_MOVES, type Features } from "@/lib/features";
+import { cn } from "@/lib/cn";
 
 /** Show features of the screen. Every change is saved on its own and reaches the screen live. */
 export function FeaturesForm({ eventId, initial }: { eventId: string; initial: Features }) {
@@ -72,6 +73,33 @@ export function FeaturesForm({ eventId, initial }: { eventId: string; initial: F
             <Field label="Mensaje"><Input maxLength={60} value={f.selfie.text} onChange={(e) => set("selfie", { text: e.target.value })} /></Field>
           </div>
           <p className="text-sm text-muted">Al terminar el tiempo, la pantalla muestra un mosaico con las fotos aprobadas que llegaron. Con la aprobación automática encendida salen todas.</p>
+        </Group>
+
+        <Group title="El robot en pantalla" emoji="🤖">
+          <Switch checked={f.robot.enabled} onChange={(enabled) => set("robot", { enabled })} label="Que aparezca de sorpresa sobre las fotos" hint="Las fotos que marques desde el control en vivo lo tienen siempre, aunque esto esté apagado." />
+          {f.robot.enabled && (
+            <Field label="Cada cuántas fotos"><Input type="number" min={2} max={50} value={f.robot.every} onChange={(e) => set("robot", { every: num(e.target.value, 2, 50) })} className="sm:max-w-40" /></Field>
+          )}
+          <div>
+            <p className="mb-2 text-sm text-muted">Qué puede hacer cuando aparece de sorpresa</p>
+            <div className="flex flex-wrap gap-1.5">
+              {ROBOT_MOVES.map((m) => {
+                const on = f.robot.moves.includes(m);
+                return (
+                  <button
+                    key={m} type="button" aria-pressed={on}
+                    onClick={() => set("robot", { moves: on ? (f.robot.moves.length > 1 ? f.robot.moves.filter((x) => x !== m) : f.robot.moves) : [...f.robot.moves, m] })}
+                    className={cn("h-10 rounded-full px-4 text-sm font-semibold", on ? "bg-primary text-on-paper" : "border border-line-strong text-muted")}
+                  >
+                    {ROBOT_MOVE_LABELS[m].emoji} {ROBOT_MOVE_LABELS[m].label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Field label="Lo que dice" hint="Vacío: una frase distinta para cada movimiento (“¡Holaaa!”, “¡Qué fotón!”…).">
+            <Input maxLength={40} value={f.robot.text} placeholder="Ej: ¡Felices 15, Sofi!" onChange={(e) => set("robot", { text: e.target.value })} />
+          </Field>
         </Group>
 
         <Group title="Al ritmo de la música" emoji="🎵">

@@ -3,7 +3,7 @@ import { Playlist } from "@/components/screen/playlist";
 import type { ScreenItem } from "@/lib/projection";
 
 const item = (id: string, minute: number): ScreenItem => ({
-  id, type: "photo", url: id, posterUrl: null, senderName: null, message: null, durationMs: null, width: 1, height: 1,
+  id, type: "photo", url: id, posterUrl: null, senderName: null, message: null, robot: null, durationMs: null, width: 1, height: 1,
   approvedAt: new Date(Date.UTC(2026, 10, 4, 22, minute)).toISOString(),
 });
 

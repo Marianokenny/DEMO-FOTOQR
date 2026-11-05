@@ -40,6 +40,11 @@ export class Playlist {
     this.sync(this.items.filter((i) => i.id !== id), { prioritizeNew: false });
   }
 
+  /** Updates the robot cameo the organizer chose for an item. */
+  setRobot(id: string, move: string | null) {
+    this.items = this.items.map((i) => (i.id === id ? { ...i, robot: move } : i));
+  }
+
   /** Puts an item at the front of the line (organizer's "pasar ahora"). */
   playNext(id: string) {
     if (!this.has(id)) return false;

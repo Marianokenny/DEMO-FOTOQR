@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError, readJson } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
+import { ROBOT_MOVES } from "@/lib/features";
 import { controlScreen, getLive, LiveError } from "@/lib/live";
 import { assertCan } from "@/lib/permissions";
 
@@ -9,6 +10,7 @@ export const runtime = "nodejs";
 
 const schema = z.discriminatedUnion("kind", [
   z.object({ kind: z.enum(["playNow", "pin"]), mediaId: z.string().max(40) }),
+  z.object({ kind: z.literal("robot"), move: z.enum([...ROBOT_MOVES, "random"]).nullable(), mediaId: z.string().max(40).optional() }),
   z.object({ kind: z.enum(["unpin", "skip", "pause", "resume", "qr", "leaderboard", "winner", "selfie"]) }),
 ]);
 

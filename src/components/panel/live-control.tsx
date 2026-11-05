@@ -2,11 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-import type { Features } from "@/lib/features";
+import { Mascot } from "@/components/brand/mascot";
+import { ROBOT_MOVE_LABELS, ROBOT_MOVES, type Features, type RobotMove } from "@/lib/features";
 import type { LiveState } from "@/lib/live";
 import type { MediaItem } from "@/lib/moderation";
 
-type Cmd = { kind: "playNow" | "pin"; mediaId: string } | { kind: "unpin" | "skip" | "pause" | "resume" | "qr" | "leaderboard" | "winner" | "selfie" };
+type Cmd =
+  | { kind: "playNow" | "pin"; mediaId: string }
+  | { kind: "unpin" | "skip" | "pause" | "resume" | "qr" | "leaderboard" | "winner" | "selfie" }
+  | { kind: "robot"; move: RobotMove | "random" | null; mediaId?: string };
 
 export function LiveControl({ eventId, initialLive, initialFeatures, projectionOn, canConfigure }: {
   eventId: string; initialLive: LiveState; initialFeatures: Features; projectionOn: boolean; canConfigure: boolean;
@@ -48,6 +52,12 @@ export function LiveControl({ eventId, initialLive, initialFeatures, projectionO
     if (!res.ok) return say(body.message ?? "No se pudo enviar.");
     setLive(body);
     say(done);
+  }
+
+  async function markRobot(item: MediaItem, move: RobotMove | "random" | null) {
+    await send({ kind: "robot", mediaId: item.id, move }, move ? "El robot va a aparecer en esta foto" : "Foto sin robot");
+    setItems((list) => list.map((x) => (x.id === item.id ? { ...x, robotMove: move } : x)));
+    setPicked((p) => (p && p.id === item.id ? { ...p, robotMove: move } : p));
   }
 
   // Beat settings: saved shortly after the last change; the screen updates on its own.
@@ -138,6 +148,35 @@ export function LiveControl({ eventId, initialLive, initialFeatures, projectionO
         </div>
       </section>
 
+      {/* Robot */}
+      <section className="overflow-hidden rounded-[16px] bg-paper text-on-paper">
+        <div className="flex items-center gap-3 p-4 pb-2">
+          <div className="h-16 shrink-0" style={{ aspectRatio: "260 / 320", animation: "fq-bob 1.6s ease-in-out infinite" }}>
+            <Mascot mood="happy" wave className="size-full" />
+          </div>
+          <div>
+            <p className="font-semibold">El robot en pantalla</p>
+            <p className="text-sm opacity-70">Tocá un movimiento y aparece ahora sobre la foto.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5 p-3 pt-1">
+          {ROBOT_MOVES.map((m) => (
+            <button
+              key={m} type="button" onClick={() => send({ kind: "robot", move: m }, `Robot: ${ROBOT_MOVE_LABELS[m].label.toLowerCase()}`)}
+              className="flex h-16 flex-col items-center justify-center rounded-[12px] bg-on-paper/[0.06] text-sm font-semibold transition-transform active:scale-95"
+            >
+              <span className="text-xl">{ROBOT_MOVE_LABELS[m].emoji}</span>{ROBOT_MOVE_LABELS[m].label}
+            </button>
+          ))}
+          <button
+            type="button" onClick={() => send({ kind: "robot", move: "random" }, "Robot sorpresa")}
+            className="flex h-16 flex-col items-center justify-center rounded-[12px] bg-primary text-sm font-semibold transition-transform active:scale-95"
+          >
+            <span className="text-xl">🎲</span>Sorpresa
+          </button>
+        </div>
+      </section>
+
       {/* Beat */}
       {canConfigure && (
         <section className="rounded-[16px] border border-line-strong p-4">
@@ -210,6 +249,7 @@ export function LiveControl({ eventId, initialLive, initialFeatures, projectionO
                   {it.thumbUrl && <img src={it.thumbUrl} alt="" loading="lazy" className="size-full object-cover" />}
                   {it.type === "video" && <span className="absolute left-1 top-1 rounded-full bg-black/60 px-1.5 text-[10px] text-white">▶</span>}
                   {it.id === live.pinnedId && <span className="absolute right-1 top-1 text-sm">📌</span>}
+                  {it.robotMove && <span className="absolute bottom-1 right-1 rounded-full bg-black/60 px-1.5 text-xs" title="Con robot">🤖</span>}
                 </button>
               </li>
             ))}
@@ -233,6 +273,23 @@ export function LiveControl({ eventId, initialLive, initialFeatures, projectionO
               <button type="button" className="h-14 rounded-full bg-primary font-semibold text-on-paper" onClick={() => { void send({ kind: "playNow", mediaId: picked.id }, "Pasa ahora"); setPicked(null); }}>Pasar ahora</button>
               <button type="button" className="h-14 rounded-full border border-line-strong font-semibold" onClick={() => { void send({ kind: "pin", mediaId: picked.id }, "Fijada en pantalla"); setPicked(null); }}>📌 Fijar</button>
             </div>
+            {picked.type === "photo" && (
+              <div className="mt-5">
+                <p className="eyebrow mb-2 text-muted">🤖 Robot en esta foto</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {([null, "random", ...ROBOT_MOVES] as const).map((m) => (
+                    <button
+                      key={m ?? "none"} type="button" onClick={() => void markRobot(picked, m)}
+                      className={cn("h-10 rounded-full px-3 text-sm font-semibold",
+                        (picked.robotMove ?? null) === m ? "bg-primary text-on-paper" : "border border-line-strong")}
+                    >
+                      {m === null ? "Sin robot" : m === "random" ? "🎲 Sorpresa" : `${ROBOT_MOVE_LABELS[m].emoji} ${ROBOT_MOVE_LABELS[m].label}`}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted">Cada vez que salga esta foto, el robot aparece haciendo eso.</p>
+              </div>
+            )}
           </div>
         </div>
       )}

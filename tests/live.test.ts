@@ -58,6 +58,27 @@ describe("funciones en vivo", () => {
     await expect(controlScreen(stranger, event.id, { kind: "skip" })).rejects.toBeInstanceOf(ForbiddenError);
   });
 
+  it("robot: marcar una foto llega a la pantalla, y solo en fotos aprobadas", async () => {
+    const f = readFeatures({});
+    expect(f.robot).toMatchObject({ enabled: true, every: 6, text: "" });
+    expect(featuresSchema.safeParse({ robot: { moves: [] } }).success).toBe(false);
+    expect(featuresSchema.safeParse({ robot: { moves: ["fly"] } }).success).toBe(false);
+    const { owner, event, mk } = await seed();
+    const m = await mk(null);
+    const pending = await mk(null, "pending");
+    await db.projectionSettings.update({ where: { eventId: event.id }, data: { enabled: true } });
+    await controlScreen(owner, event.id, { kind: "robot", mediaId: m.id, move: "dance" });
+    expect((await buildScreenState(event.id)).items.find((i) => i.id === m.id)?.robot).toBe("dance");
+    await expect(controlScreen(owner, event.id, { kind: "robot", mediaId: pending.id, move: "wave" })).rejects.toThrow(/aprobadas/);
+    await controlScreen(owner, event.id, { kind: "robot", mediaId: m.id, move: null });
+    expect((await db.media.findUniqueOrThrow({ where: { id: m.id } })).robotMove).toBeNull();
+    await controlScreen(owner, event.id, { kind: "robot", move: "random" }); // robot now, no photo
+    await saveFeatures(owner, event.id, { robot: { ...f.robot, moves: ["photo", "love"], every: 3 } });
+    expect((await buildScreenState(event.id)).features.robot).toMatchObject({ moves: ["photo", "love"], every: 3 });
+    const stranger = await makeUser();
+    await expect(controlScreen(stranger, event.id, { kind: "robot", move: "wave" })).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
   it("ranking: top por fotos aprobadas, sin anónimos", async () => {
     const { event, guest, mk } = await seed();
     const ana = await guest("Ana"), juan = await guest("Juan"), anon = await guest(null);

@@ -121,3 +121,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 @keyframes fq-scanline { 0% { top: 4%; } 50% { top: 92%; } 100% { top: 4%; } }
 @keyframes fq-shadow { 0%, 100% { transform: scaleX(1); opacity: 0.35; } 50% { transform: scaleX(0.82); opacity: 0.22; } }
 @keyframes fq-heart { 0% { opacity: 0; transform: translateY(0) scale(0.4); } 30% { opacity: 1; transform: translateY(-4cqh) scale(1); } 100% { opacity: 0; transform: translateY(-14cqh) scale(0.9); } }
+
+/* ---------- Robot cameos ---------- */
+@keyframes fq-wave { 0%, 100% { transform: rotate(28deg); } 50% { transform: rotate(72deg); } }
+@keyframes fq-dance { 0%, 100% { transform: rotate(-10deg) translateY(0); } 25% { transform: rotate(0deg) translateY(-8%); } 50% { transform: rotate(10deg) translateY(0); } 75% { transform: rotate(0deg) translateY(-8%); } }
+@keyframes fq-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6%) rotate(2deg); } }
+@keyframes fq-note { 0% { opacity: 0; transform: translate(0, 0) rotate(-10deg) scale(0.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--fq-dx, 20px), -220%) rotate(15deg) scale(1.1); } }
+@keyframes fq-bubble { 0% { opacity: 0; transform: scale(0.4) translateY(20%); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: none; } }
+@keyframes fq-jump { 0%, 100% { transform: translateY(0) scale(1, 1); } 10% { transform: translateY(0) scale(1.08, 0.9); } 40% { transform: translateY(-22%) scale(0.95, 1.06); } 70% { transform: translateY(0) scale(1.06, 0.94); } 85% { transform: translateY(0) scale(1, 1); } }
+@keyframes fq-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes fq-polaroid { 0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.3); } 30% { opacity: 1; transform: translate(var(--fq-px, -60px), -40px) rotate(-12deg) scale(1); } 100% { opacity: 1; transform: translate(var(--fq-tx, -140px), var(--fq-ty, 120px)) rotate(var(--fq-rot, -8deg)) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .fq-motion, .fq-motion * { animation: none !important; transition: none !important; } }
+@keyframes fq-glow-beat { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.18); } }

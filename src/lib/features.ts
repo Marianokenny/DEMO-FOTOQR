@@ -1,5 +1,16 @@
 import { z } from "zod";
 
+/** What the robot mascot can do when it shows up over a photo. */
+export const ROBOT_MOVES = ["wave", "photo", "dance", "love", "peek"] as const;
+export type RobotMove = (typeof ROBOT_MOVES)[number];
+export const ROBOT_MOVE_LABELS: Record<RobotMove, { label: string; emoji: string; line: string }> = {
+  wave: { label: "Saluda", emoji: "👋", line: "¡Holaaa!" },
+  photo: { label: "Saca foto", emoji: "📸", line: "¡Qué fotón!" },
+  dance: { label: "Baila", emoji: "🕺", line: "¡A bailar!" },
+  love: { label: "Corazones", emoji: "💛", line: "¡Me encanta!" },
+  peek: { label: "Se asoma", emoji: "👀", line: "¿Quién sacó esta?" },
+};
+
 /** Extra show features for the projection screen. Stored as JSON on projection_settings.features. */
 export const featuresSchema = z.object({
   qrBreak: z.object({
@@ -21,6 +32,14 @@ export const featuresSchema = z.object({
     at: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).or(z.literal("")).default(""),
     collectSeconds: z.number().int().min(30).max(300).default(90),
     text: z.string().trim().max(60).default("¡Todos sacan selfie YA!"),
+  }).default({}),
+  robot: z.object({
+    /** Surprise cameos over random photos. Photos the organizer marks always get one. */
+    enabled: z.boolean().default(true),
+    every: z.number().int().min(2).max(50).default(6),
+    moves: z.array(z.enum(ROBOT_MOVES)).min(1).max(ROBOT_MOVES.length).default([...ROBOT_MOVES]),
+    /** Speech bubble; empty = a different line for each move. */
+    text: z.string().trim().max(40).default(""),
   }).default({}),
   beat: z.object({
     enabled: z.boolean().default(false),

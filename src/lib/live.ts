@@ -1,7 +1,7 @@
 import type { User } from "@prisma/client";
 import { APP_UTC_OFFSET } from "./dates";
 import { db } from "./db";
-import { readFeatures, featuresSchema, type Features } from "./features";
+import { readFeatures, featuresSchema, type Features, type RobotMove } from "./features";
 import { resolveLink } from "./links";
 import { assertCan } from "./permissions";
 import { publish, publishToGuest, type ScreenCommand } from "./realtime";
@@ -74,7 +74,9 @@ async function startSelfie(eventId: string, features: Features) {
 
 export type ControlInput =
   | { kind: "playNow" | "pin"; mediaId: string }
-  | { kind: "unpin" | "skip" | "pause" | "resume" | "qr" | "leaderboard" | "winner" | "selfie" };
+  | { kind: "unpin" | "skip" | "pause" | "resume" | "qr" | "leaderboard" | "winner" | "selfie" }
+  /** With mediaId: mark that photo (move null clears it). Without: the robot shows up now. */
+  | { kind: "robot"; move: RobotMove | "random" | null; mediaId?: string };
 
 /** Commands from the organizer's phone to the screen. */
 export async function controlScreen(user: Actor, eventId: string, input: ControlInput) {
@@ -101,6 +103,17 @@ export async function controlScreen(user: Actor, eventId: string, input: Control
     case "winner":
       command = { kind: "winner", winner: await winnerOf(eventId) };
       break;
+    case "robot": {
+      if (input.mediaId) {
+        const m = await db.media.findFirst({ where: { id: input.mediaId, eventId, status: "approved", type: "photo" } });
+        if (!m) throw new LiveError("El robot solo aparece en fotos aprobadas.");
+        await db.media.update({ where: { id: m.id }, data: { robotMove: input.move } });
+        command = { kind: "robotMark", mediaId: m.id, move: input.move };
+      } else {
+        command = { kind: "robot", move: input.move ?? "random" };
+      }
+      break;
+    }
     case "selfie": {
       const s = await db.projectionSettings.findUniqueOrThrow({ where: { eventId } });
       await startSelfie(eventId, readFeatures(s.features));

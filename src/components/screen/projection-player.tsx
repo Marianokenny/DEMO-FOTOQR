@@ -10,6 +10,8 @@ import { Mascot } from "@/components/brand/mascot";
 import { FONT_VARS } from "./fonts";
 import { Caption, Leaderboard, Mosaic, QrBreak, SelfieCall, WinnerReveal, type MosaicItem, type Overlay } from "./overlays";
 import { Playlist } from "./playlist";
+import { CAMEO_MS, pickMove, RobotCameo } from "./robot-cameo";
+import type { RobotMove } from "@/lib/features";
 
 const FULL_REFRESH_MS = 15 * 60 * 1000; // renews signed URLs long before they expire
 const LOAD_TIMEOUT_MS = 10_000;
@@ -191,6 +193,8 @@ export function ProjectionPlayer({ token, initial }: { token: string; initial: S
   const paused = useRef(initial.live.paused);
   const pinned = useRef<string | null>(initial.live.pinnedId);
   const [overlay, setOverlay] = useState<Overlay | null>(null);
+  const [cameo, setCameo] = useState<{ move: RobotMove; side: "left" | "right"; key: number } | null>(null);
+  const cameoTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const overlayRef = useRef<Overlay | null>(null);
   const [audio, setAudio] = useState(false);
   const [hint, setHint] = useState(true);
@@ -207,6 +211,27 @@ export function ProjectionPlayer({ token, initial }: { token: string; initial: S
   }, [token]);
 
   const clearTimers = () => { clearTimeout(timer.current); clearTimeout(watchdog.current); };
+
+  /** The mascot drops in over the photo on screen. */
+  const playCameo = useCallback((move: string | null | undefined, delayMs = 0) => {
+    cameoTimers.current.forEach(clearTimeout);
+    const f = stateRef.current.features;
+    const pos = stateRef.current.appearance.sender.position;
+    const side: "left" | "right" = pos === "bottom-right" ? "left" : pos === "bottom-left" ? "right" : Math.random() < 0.5 ? "left" : "right";
+    const key = Date.now();
+    cameoTimers.current = [
+      setTimeout(() => setCameo({ move: pickMove(move, f.robot.moves), side, key }), delayMs),
+      setTimeout(() => setCameo((c) => (c?.key === key ? null : c)), delayMs + CAMEO_MS),
+    ];
+  }, []);
+
+  /** Marked photos always get the robot; the rest get a surprise visit every few photos. */
+  const maybeCameo = useCallback((item: ScreenItem) => {
+    if (item.type !== "photo" || overlayRef.current) return;
+    const f = stateRef.current.features.robot;
+    if (item.robot) return playCameo(item.robot, 700);
+    if (f.enabled && shownCount.current % f.every === Math.floor(f.every / 2)) playCameo("random", 900);
+  }, [playCameo]);
 
   const scheduleFor = useCallback((item: ScreenItem, advance: () => void) => {
     clearTimers();
@@ -313,13 +338,14 @@ export function ProjectionPlayer({ token, initial }: { token: string; initial: S
         }
         if (await showItem(next)) {
           scheduleFor(next, () => void advanceRef.current());
+          maybeCameo(next);
           return;
         }
       }
     } finally {
       advancing.current = false;
     }
-  }, [scheduleFor, showItem, openOverlay, report]);
+  }, [scheduleFor, showItem, openOverlay, report, maybeCameo]);
   const advanceRef = useRef(advance);
   advanceRef.current = advance;
   const breakShownAt = useRef(new Set<string>());
@@ -407,8 +433,15 @@ export function ProjectionPlayer({ token, initial }: { token: string; initial: S
       case "selfie":
         startSelfie(c.text, Date.parse(c.startedAt), Date.parse(c.endsAt));
         break;
+      case "robot":
+        if (!overlayRef.current) playCameo(c.move);
+        break;
+      case "robotMark":
+        playlist.current.setRobot(c.mediaId, c.move);
+        if (c.move && slotsRef.current[activeRef.current]?.item.id === c.mediaId && !overlayRef.current) playCameo(c.move);
+        break;
     }
-  }, [openOverlay, endOverlay, startSelfie, report]);
+  }, [openOverlay, endOverlay, startSelfie, report, playCameo]);
 
   // First start (and resume a selfie moment that is still running).
   useEffect(() => {
@@ -417,7 +450,7 @@ export function ProjectionPlayer({ token, initial }: { token: string; initial: S
     const sf = initial.live.selfie;
     if (sf && Date.parse(sf.endsAt) > Date.now()) startSelfie(initial.features.selfie.text, Date.parse(sf.startedAt), Date.parse(sf.endsAt));
     else void advanceRef.current();
-    return () => { clearTimers(); clearTimeout(overlayTimer.current); };
+    return () => { clearTimers(); clearTimeout(overlayTimer.current); cameoTimers.current.forEach(clearTimeout); };
   }, [initial, startSelfie]);
 
   // Live channel + periodic full refresh.
@@ -515,6 +548,7 @@ export function ProjectionPlayer({ token, initial }: { token: string; initial: S
           />
         ))}
       </div>
+      {cameo && showing && !overlay && <RobotCameo key={cameo.key} move={cameo.move} side={cameo.side} text={features.robot.text} />}
       {!showing && !overlay && <WaitingScreen appearance={state.appearance} event={state.event} uploadUrl={state.uploadUrl} reason={state.reason} />}
       {overlay?.kind === "qr" && <QrBreak key={overlay.until} text={features.qrBreak.text} uploadUrl={state.uploadUrl} eventName={state.event.name} appearance={state.appearance} until={overlay.until} />}
       {overlay?.kind === "leaderboard" && <Leaderboard key={overlay.until} rows={state.leaderboard} until={overlay.until} />}

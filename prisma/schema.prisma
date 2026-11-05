@@ -197,6 +197,8 @@ model Media {
   guestSession   GuestSession? @relation(fields: [guestSessionId], references: [id], onDelete: SetNull)
   senderName     String?
   message        String?
+  /// Robot cameo the organizer chose for this photo: a move name or "random".
+  robotMove      String?
   type           MediaType
   status         MediaStatus   @default(uploading)
   originalKey    String

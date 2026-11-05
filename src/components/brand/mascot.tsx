@@ -1,13 +1,25 @@
+import { useId } from "react";
+
 /**
  * The FOTOSQR mascot: a little hovering robot with a camera. Pure SVG, soft shading for a 3D look.
  * `mood` changes the eyes; `camera` puts the camera in its raised hand.
  */
-export type MascotMood = "idle" | "focus" | "happy";
+export type MascotMood = "idle" | "focus" | "happy" | "love" | "wink" | "wow";
 
-export function Mascot({ mood = "idle", cameraUp = false, flash = false, className, style }: {
-  mood?: MascotMood; cameraUp?: boolean; flash?: boolean; className?: string; style?: React.CSSProperties;
+const HEART = "M0 -6 C -4 -14, -16 -12, -14 -2 C -12 6, -2 10, 0 14 C 2 10, 12 6, 14 -2 C 16 -12, 4 -14, 0 -6 Z";
+
+export function Mascot({ mood = "idle", cameraUp = false, flash = false, wave = false, look, className, style }: {
+  mood?: MascotMood; cameraUp?: boolean; flash?: boolean;
+  /** Waves the free hand. */
+  wave?: boolean;
+  /** Where the eyes look, -1..1 on each axis. */
+  look?: { x: number; y: number };
+  className?: string; style?: React.CSSProperties;
 }) {
-  const id = "fqm"; // gradient ids are global; all mascots share the same definitions
+  const lx = Math.max(-1, Math.min(1, look?.x ?? 0)) * 9;
+  const ly = Math.max(-1, Math.min(1, look?.y ?? 0)) * 6;
+  // Gradient ids are global: each robot needs its own, or a hidden one breaks the others.
+  const id = `fqm${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   return (
     <svg viewBox="0 0 260 320" className={className} style={style} role="img" aria-label="Robot de FOTOSQR">
       <defs>
@@ -68,7 +80,7 @@ export function Mascot({ mood = "idle", cameraUp = false, flash = false, classNa
       <path d="M78 100 C 92 92, 118 90, 132 92" stroke="#fff" strokeWidth="5" strokeLinecap="round" fill="none" opacity="0.14" />
 
       {/* eyes */}
-      <g fill="#FF9D78" filter={`url(#${id}-glow)`}>
+      <g fill="#FF9D78" filter={`url(#${id}-glow)`} style={{ transform: `translate(${lx}px, ${ly}px)`, transition: "transform 220ms ease-out" }}>
         {mood === "happy" ? (
           <>
             <path d="M88 132 Q 101 116 114 132" stroke="#FF9D78" strokeWidth="8" strokeLinecap="round" fill="none" />
@@ -79,6 +91,24 @@ export function Mascot({ mood = "idle", cameraUp = false, flash = false, classNa
             <rect x="90" y="122" width="24" height="12" rx="6" />
             <circle cx="158" cy="128" r="14" fill="none" stroke="#FF9D78" strokeWidth="5" />
             <circle cx="158" cy="128" r="5" />
+          </>
+        ) : mood === "love" ? (
+          <g style={{ animation: "fq-glow-beat 0.8s ease-in-out infinite", transformOrigin: "130px 128px" }}>
+            <path d={HEART} transform="translate(101 126) scale(1.05)" fill="#FF5B2E" />
+            <path d={HEART} transform="translate(159 126) scale(1.05)" fill="#FF5B2E" />
+          </g>
+        ) : mood === "wink" ? (
+          <>
+            <rect x="90" y="112" width="22" height="32" rx="11" />
+            <circle cx="104" cy="120" r="4" fill="#fff" opacity="0.85" />
+            <path d="M146 130 Q 159 120 172 130" stroke="#FF9D78" strokeWidth="8" strokeLinecap="round" fill="none" />
+          </>
+        ) : mood === "wow" ? (
+          <>
+            <circle cx="101" cy="126" r="14" />
+            <circle cx="159" cy="126" r="14" />
+            <circle cx="106" cy="120" r="4.5" fill="#fff" opacity="0.9" />
+            <circle cx="164" cy="120" r="4.5" fill="#fff" opacity="0.9" />
           </>
         ) : (
           <g style={{ transformOrigin: "130px 128px", animation: "fq-blink 4s ease-in-out infinite" }}>
@@ -92,16 +122,17 @@ export function Mascot({ mood = "idle", cameraUp = false, flash = false, classNa
       {/* cheeks and mouth */}
       <ellipse cx="80" cy="152" rx="10" ry="6" fill="#FF5B2E" opacity="0.45" />
       <ellipse cx="180" cy="152" rx="10" ry="6" fill="#FF5B2E" opacity="0.45" />
-      <path d={mood === "happy" ? "M118 152 Q 130 166 142 152" : "M121 156 Q 130 162 139 156"} stroke="#F3ECE0" strokeWidth="5" strokeLinecap="round" fill={mood === "happy" ? "#F3ECE0" : "none"} />
+      {mood === "wow" ? (
+        <ellipse cx="130" cy="158" rx="7" ry="9" fill="none" stroke="#F3ECE0" strokeWidth="5" />
+      ) : (
+        <path
+          d={mood === "happy" || mood === "love" || mood === "wink" ? "M118 152 Q 130 166 142 152" : "M121 156 Q 130 162 139 156"}
+          stroke="#F3ECE0" strokeWidth="5" strokeLinecap="round" fill={mood === "happy" || mood === "love" || mood === "wink" ? "#F3ECE0" : "none"}
+        />
+      )}
 
       {/* neck */}
       <rect x="112" y="196" width="36" height="14" rx="6" fill="#3A342E" />
-
-      {/* left arm (waving side) */}
-      <g style={{ transformOrigin: "86px 222px", transform: mood === "happy" ? "rotate(-120deg)" : "rotate(12deg)", transition: "transform 400ms cubic-bezier(.2,.8,.2,1)" }}>
-        <rect x="58" y="214" width="34" height="18" rx="9" fill={`url(#${id}-body)`} />
-        <circle cx="58" cy="223" r="12" fill={`url(#${id}-head)`} />
-      </g>
 
       {/* body */}
       <rect x="80" y="206" width="100" height="74" rx="32" fill={`url(#${id}-body)`} />
@@ -115,6 +146,17 @@ export function Mascot({ mood = "idle", cameraUp = false, flash = false, classNa
         <rect x="136" y="255" width="4" height="4" />
         <rect x="140" y="259" width="4" height="4" />
         <rect x="132" y="259" width="4" height="4" />
+      </g>
+
+      {/* left arm (waving side) */}
+      <g style={{
+        transformOrigin: "86px 222px",
+        transform: wave ? undefined : mood === "happy" || mood === "love" ? "rotate(40deg)" : "rotate(12deg)",
+        animation: wave ? "fq-wave 0.5s ease-in-out infinite" : undefined,
+        transition: "transform 400ms cubic-bezier(.2,.8,.2,1)",
+      }}>
+        <rect x="58" y="214" width="34" height="18" rx="9" fill={`url(#${id}-body)`} />
+        <circle cx="58" cy="223" r="12" fill={`url(#${id}-head)`} />
       </g>
 
       {/* right arm with camera */}

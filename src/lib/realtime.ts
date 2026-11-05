@@ -1,3 +1,4 @@
+import type { RobotMove } from "./features";
 import { redis } from "./redis";
 
 export type RealtimeMessage =
@@ -18,7 +19,9 @@ export type ScreenCommand =
   | { kind: "qr" }
   | { kind: "leaderboard" }
   | { kind: "winner"; winner: { name: string; count: number; thumbUrl: string | null } | null }
-  | { kind: "selfie"; startedAt: string; endsAt: string; text: string };
+  | { kind: "selfie"; startedAt: string; endsAt: string; text: string }
+  | { kind: "robot"; move: RobotMove | "random" }
+  | { kind: "robotMark"; mediaId: string; move: RobotMove | "random" | null };
 
 export type GuestMessage =
   | { type: "upcoming"; mediaId: string; thumbUrl: string | null }
